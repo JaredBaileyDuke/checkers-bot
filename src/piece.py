@@ -14,8 +14,10 @@ class Piece:
         self.color = color  # Color of the piece
         self.location = location  # Current location of the piece
         self.king = False  # Indicates if the piece is a king
-        self.directions = []  # List of potential move directions
+        self.move_directions = []  # List of potential move directions
+        self.jump_directions = []
         self.potential_move_directions(self.location) # Initialize potential move directions
+        self.potential_jump_directions(self.location) # Initialize potential jump directions
 
     def promote_to_king(self):
         """
@@ -60,23 +62,47 @@ class Piece:
         
         # Determine potential move directions based on king status
         if self.king:
-            self.directions = [(-1, -1), (-1, 1), (1, -1), (1, 1)]
+            self.move_directions = [(-1, -1), (-1, 1), (1, -1), (1, 1)]
         else:
-            [(-1, -1), (-1, 1)] if self._color == 'Red' else [(1, -1), (1, 1)]
+            [(-1, -1), (-1, 1)] if self.get_color == 'Red' else [(1, -1), (1, 1)]
 
         # Check for edges of the board, remove options that go off the board
         if row == 0: # Top row
-            self.directions.remove((-1, -1))
-            self.directions.remove((-1, 1))
+            try:
+                self.move_directions.remove((-1, -1))
+            except:
+                pass
+            try:
+                self.move_directions.remove((-1, 1))
+            except:
+                pass
         elif row == 7: # Bottom row
-            self.directions.remove((1, -1))
-            self.directions.remove((1, 1))
+            try:
+                self.move_directions.remove((1, -1))
+            except:
+                pass
+            try:
+                self.move_directions.remove((1, 1))
+            except:
+                pass
         if col == 0: # Left column
-            self.directions.remove((-1, -1))
-            self.directions.remove((1, -1))
+            try:
+                self.move_directions.remove((-1, -1))
+            except:
+                pass
+            try:
+                self.move_directions.remove((1, -1))
+            except:
+                pass
         elif col == 7: # Right column
-            self.directions.remove((-1, 1))
-            self.directions.remove((1, 1))
+            try:
+                self.move_directions.remove((-1, 1))
+            except:
+                pass
+            try:
+                self.move_directions.remove((1, 1))
+            except:
+                pass
 
     def potential_jump_directions(self, dest_location):
         """
@@ -90,23 +116,47 @@ class Piece:
 
         # Determine potential jump directions based on king status
         if self.king:
-            self.directions = [(-2, -2), (-2, 2), (2, -2), (2, 2)]
+            self.jump_directions = [(-2, -2), (-2, 2), (2, -2), (2, 2)]
         else:
-            self.directions = [(-2, -2), (-2, 2)] if self.color == 'Red' else [(2, -2), (2, 2)]
+            self.jump_directions = [(-2, -2), (-2, 2)] if self.color == 'Red' else [(2, -2), (2, 2)]
 
         # Check for edges of the board, remove options that go off the board
         if row <= 1: # Top rows
-            self.directions.remove((-2, -2))
-            self.directions.remove((-2, 2))
+            try:
+                self.jump_directions.remove((-2, -2))
+            except:
+                pass
+            try:
+                self.jump_directions.remove((-2, 2))
+            except:
+                pass
         elif row >= 6: # Bottom rows
-            self.directions.remove((2, -2))
-            self.directions.remove((2, 2))
+            try:
+                self.jump_directions.remove((2, -2))
+            except:
+                pass
+            try:
+                self.jump_directions.remove((2, 2))
+            except:
+                pass
         if col <= 1: # Left columns
-            self.directions.remove((-2, -2))
-            self.directions.remove((2, -2))
+            try:
+                self.jump_directions.remove((-2, -2))
+            except:
+                pass
+            try:
+                self.jump_directions.remove((2, -2))
+            except:
+                pass
         elif col >= 6: # Right columns
-            self.directions.remove((-2, 2))
-            self.directions.remove((2, 2))
+            try:
+                self.jump_directions.remove((-2, 2))
+            except:
+                pass
+            try:
+                self.jump_directions.remove((2, 2))
+            except:
+                pass
 
     def get_location(self):
         """
@@ -120,17 +170,23 @@ class Piece:
         """
         return self.color
     
-    def get_king_status(self):
+    def get_king(self):
         """
         Return the king status of the piece
         """
         return self.king
     
-    def get_directions(self):
+    def get_potential_move_directions(self):
         """
         Return the potential move directions of the piece
         """
-        return self.directions
+        return self.move_directions
+    
+    def get_potential_jump_directions(self):
+        """
+        Return the potential jump directions of the piece
+        """
+        return self.jump_directions
 
     def __str__(self):
         """

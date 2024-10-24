@@ -35,9 +35,9 @@ class Board:
                 piece = self.board[i][j]
                 if piece is not None:
                     if piece.get_king() == True:
-                        print(piece.get_color[0].upper(), end=" ")
+                        print(piece.get_color()[0].upper(), end=" ")
                     else:
-                        print(piece.get_color[0].lower(), end=" ")
+                        print(piece.get_color()[0].lower(), end=" ")
                 else:
                     print(".", end=" ")
             print()
@@ -60,19 +60,68 @@ class Board:
         if (piece.color == 'Red' and dest_row == 7) or (piece.color == 'Black' and dest_row == 0):
             piece.promote_to_king()
 
-    def get_valid_moves(self, piece):
+    def find_valid_moves_and_jumps(self, piece):
         """
         Get a list of valid moves for a given piece.
         """
         valid_moves = []
-        directions = piece.get_directions()
-        row, col = piece.get_location()
+        valid_jumps = []
+        curr_row, curr_col = piece.get_location()
 
-        for direction in directions:
-            new_row = row + direction[0]
-            new_col = col + direction[1]
+        # Get potential move directions
+        move_directions = piece.get_potential_move_directions()
+        jump_directions = piece.get_potential_jump_directions()
 
-            # Check if the new position collides with the board boundaries
+        # Add potential moves to valid moves, including adding to current position
+        for direction in move_directions:
+            new_row = curr_row + direction[0]
+            new_col = curr_col + direction[1]
+            valid_moves.append((new_row, new_col))
+        for direction in jump_directions:
+            new_row = curr_row + direction[0]
+            new_col = curr_col + direction[1]
+            valid_jumps.append((new_row, new_col))
+
+        # TODO: Make is_collision method to check if the move or jump is a collision with another piece
+        # search other pieces to see if the move will collide
+        for other_piece in self.board:
+            other_piece_location = other_piece.get_location()
+            # remove the location of the other piece from valid moves
+            if other_piece_location in valid_moves:
+                valid_moves.remove(other_piece_location)
+            # remove the location of the other piece from valid jumps
+            if other_piece_location in valid_jumps:
+                valid_jumps.remove(other_piece_location)
+
+        # search other pieces to see if jump is valid
+        for potential_jump in valid_jumps:
+            jump_row = potential_jump[0]
+            jump_col = potential_jump[1]
+            # Check if there is an opponent's piece to jump over
+            if self.is_valid_jump(piece, jump_row, jump_col):
+                valid_jumps.append(potential_jump)
+
+        return valid_moves + valid_jumps
+
+    def is_valid_jump(self, piece, jump_row, jump_col):
+        """
+        Check if a jump is valid by verifying if there is an opponent's piece to jump over
+        Does not check if the destination is valid
+        """
+        curr_row, curr_col = piece.get_location()
+        # Calculate the row and column of the piece being jumped over
+        over_row = (curr_row + jump_row) // 2
+        over_col = (curr_col + jump_col) // 2
+
+        # Check if the piece being jumped over is an opponent's piece
+        for other_piece in self.board:
+            if other_piece.get_location() == (over_row, over_col):
+                return other_piece.color != piece.color # Return True if it's an opponent's piece
+        return False   
+    
+    def remove_piece(self, piece):
+        self.board[piece.location] = None
+
 
 if __name__ == "__main__":
     game_board = Board()
