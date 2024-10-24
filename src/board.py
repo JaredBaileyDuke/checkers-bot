@@ -2,8 +2,11 @@ from piece import Piece
 
 class Board:
     def __init__(self):
+        """
+        Initialize the board with pieces in starting positions
+        """
         self.board = self.create_board()
-
+        self.store_piece_locations()
 
     def create_board(self):
         """
@@ -22,7 +25,19 @@ class Board:
             for col in range(8):
                 if (row + col) % 2 != 0:
                     board[row][col] = Piece('Black', (row, col))
+
         return board
+    
+    def store_piece_locations(self):
+        """
+        Store piece locations in a list for easy access
+        """
+        self.pieces = []
+        for i in range(8):
+            for j in range(8):
+                piece = self.board[i][j]
+                piece_location = piece.get_location()
+                self.pieces.append(piece_location)
 
     def draw_board(self):
         """
@@ -126,3 +141,5 @@ class Board:
 if __name__ == "__main__":
     game_board = Board()
     game_board.draw_board()  # Display the board
+    game_board.store_piece_locations()
+    print(game_board.pieces) # piece list
