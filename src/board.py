@@ -4,6 +4,7 @@ class Board:
     def __init__(self):
         self.board = self.create_board()
 
+
     def create_board(self):
         """
         Initialize an 8x8 board with starting positions.
