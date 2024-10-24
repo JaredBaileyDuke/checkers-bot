@@ -139,3 +139,11 @@ class Piece:
         return f"{self.color[0].upper()}{self.location}{'K' if self.king else ''}"
     
 
+if __name__ == "__main__":
+    # Example usage
+    red_piece = Piece('Red', (2, 3))
+    print(red_piece)  # Output: R(2, 3)
+    red_piece.promote_to_king()
+    print(red_piece)  # Output: R(2, 3)K
+    red_piece.move(3, 4)
+    print(red_piece)  # Output: R(3, 4)K
