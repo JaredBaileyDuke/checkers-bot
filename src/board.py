@@ -72,10 +72,17 @@ class Board:
             return
         
         # Move the piece
+        piece_location = piece.get_location()
+        self.board[piece_location[0]][piece_location[1]] = None
         piece.move(dest_row, dest_col)
+        self.board[dest_row][dest_col] = piece
+
         # Check for king promotion
         if (piece.color == 'red' and dest_row == 7) or (piece.color == 'black' and dest_row == 0):
             piece.promote_to_king()
+
+        #update piece locations
+        self.store_piece_locations()
 
     def find_valid_moves_and_jumps(self, piece):
         """
@@ -111,24 +118,28 @@ class Board:
             jump_row = potential_jump[0]
             jump_col = potential_jump[1]
             # Check if there is an opponent's piece to jump over
-            if self.is_valid_jump(piece, jump_row, jump_col):
-                valid_jumps.append(potential_jump)
+            if not self.is_valid_jump(piece, jump_row, jump_col):
+                valid_jumps.remove(potential_jump)
 
         return valid_moves + valid_jumps
 
     def is_valid_jump(self, piece, jump_row, jump_col):
         """
         Check if a jump is valid by verifying if there is an opponent's piece to jump over
-        Does not check if the destination is valid
+        Also checks if the destination is valid
         """
+        #If there is a piece at the destination, return False
+        if self.get_piece(jump_row, jump_col) is not None:
+            return False
+        
         curr_row, curr_col = piece.get_location()
         # Calculate the row and column of the piece being jumped over
         over_row = (curr_row + jump_row) // 2
         over_col = (curr_col + jump_col) // 2
 
         # Check if the piece being jumped over is an opponent's piece
-        if self.pieces.__contains__((over_row, over_col)):
-                return self.get_piece(over_row, over_col).color != piece.color #check if the piece is an opponent's piece
+        if self.get_piece(over_row, over_col) is not None:
+            return self.get_piece(over_row, over_col).color != piece.color #check if the piece is an opponent's piece
             
         return False   
     
