@@ -14,10 +14,8 @@ class Piece:
         self.color = color  # Color of the piece
         self.location = location  # Current location of the piece
         self.king = False  # Indicates if the piece is a king
-        self.move_directions = []  # List of potential move directions
-        self.jump_directions = []
+        self.directions = []  # List of potential move directions
         self.potential_move_directions(self.location) # Initialize potential move directions
-        self.potential_jump_directions(self.location) # Initialize potential jump directions
 
     def promote_to_king(self):
         """
@@ -62,47 +60,31 @@ class Piece:
         
         # Determine potential move directions based on king status
         if self.king:
-            self.move_directions = [(-1, -1), (-1, 1), (1, -1), (1, 1)]
+            self.directions = [(-1, -1), (-1, 1), (1, -1), (1, 1)]
         else:
-            [(-1, -1), (-1, 1)] if self.get_color == 'Red' else [(1, -1), (1, 1)]
+            [(-1, -1), (-1, 1)] if self.color == 'Red' else [(1, -1), (1, 1)]
 
         # Check for edges of the board, remove options that go off the board
         if row == 0: # Top row
-            try:
-                self.move_directions.remove((-1, -1))
-            except:
-                pass
-            try:
-                self.move_directions.remove((-1, 1))
-            except:
-                pass
+            if self.directions.__contains__((-1, -1)):
+                self.directions.remove((-1, -1))
+            if self.directions.__contains__((-1, 1)):
+                self.directions.remove((-1, 1))
         elif row == 7: # Bottom row
-            try:
-                self.move_directions.remove((1, -1))
-            except:
-                pass
-            try:
-                self.move_directions.remove((1, 1))
-            except:
-                pass
+            if self.directions.__contains__((1, -1)):
+                self.directions.remove((1, -1))
+            if self.directions.__contains__((1, 1)):
+                self.directions.remove((1, 1))
         if col == 0: # Left column
-            try:
-                self.move_directions.remove((-1, -1))
-            except:
-                pass
-            try:
-                self.move_directions.remove((1, -1))
-            except:
-                pass
+            if self.directions.__contains__((-1, -1)):
+                self.directions.remove((-1, -1))
+            if self.directions.__contains__((1, -1)):
+                self.directions.remove((1, -1))
         elif col == 7: # Right column
-            try:
-                self.move_directions.remove((-1, 1))
-            except:
-                pass
-            try:
-                self.move_directions.remove((1, 1))
-            except:
-                pass
+            if self.directions.__contains__((-1, 1)):
+                self.directions.remove((-1, 1))
+            if self.directions.__contains__((1, 1)):
+                self.directions.remove((1, 1))
 
     def potential_jump_directions(self, dest_location):
         """
@@ -116,47 +98,31 @@ class Piece:
 
         # Determine potential jump directions based on king status
         if self.king:
-            self.jump_directions = [(-2, -2), (-2, 2), (2, -2), (2, 2)]
+            self.directions = [(-2, -2), (-2, 2), (2, -2), (2, 2)]
         else:
-            self.jump_directions = [(-2, -2), (-2, 2)] if self.color == 'Red' else [(2, -2), (2, 2)]
+            self.directions = [(-2, -2), (-2, 2)] if self.color == 'Red' else [(2, -2), (2, 2)]
 
         # Check for edges of the board, remove options that go off the board
         if row <= 1: # Top rows
-            try:
-                self.jump_directions.remove((-2, -2))
-            except:
-                pass
-            try:
-                self.jump_directions.remove((-2, 2))
-            except:
-                pass
+            if self.directions.__contains__((-2, -2)):
+                self.directions.remove((-2, -2))
+            if self.directions.__contains__((-2, 2)):
+                self.directions.remove((-2, 2))
         elif row >= 6: # Bottom rows
-            try:
-                self.jump_directions.remove((2, -2))
-            except:
-                pass
-            try:
-                self.jump_directions.remove((2, 2))
-            except:
-                pass
+            if self.directions.__contains__((2, -2)):
+                self.directions.remove((2, -2))
+            if self.directions.__contains__((2, 2)):
+                self.directions.remove((2, 2))
         if col <= 1: # Left columns
-            try:
-                self.jump_directions.remove((-2, -2))
-            except:
-                pass
-            try:
-                self.jump_directions.remove((2, -2))
-            except:
-                pass
+            if self.directions.__contains__((-2, -2)):
+                self.directions.remove((-2, -2))
+            if self.directions.__contains__((2, -2)):
+                self.directions.remove((2, -2))
         elif col >= 6: # Right columns
-            try:
-                self.jump_directions.remove((-2, 2))
-            except:
-                pass
-            try:
-                self.jump_directions.remove((2, 2))
-            except:
-                pass
+            if self.directions.__contains__((-2, 2)):
+                self.directions.remove((-2, 2))
+            if self.directions.__contains__((2, 2)):
+                self.directions.remove((2, 2))
 
     def get_location(self):
         """
@@ -176,17 +142,11 @@ class Piece:
         """
         return self.king
     
-    def get_potential_move_directions(self):
+    def get_directions(self):
         """
         Return the potential move directions of the piece
         """
-        return self.move_directions
-    
-    def get_potential_jump_directions(self):
-        """
-        Return the potential jump directions of the piece
-        """
-        return self.jump_directions
+        return self.directions
 
     def __str__(self):
         """

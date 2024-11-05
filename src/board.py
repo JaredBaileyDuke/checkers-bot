@@ -36,8 +36,9 @@ class Board:
         for i in range(8):
             for j in range(8):
                 piece = self.board[i][j]
-                piece_location = piece.get_location()
-                self.pieces.append(piece_location)
+                if piece is not None:
+                    piece_location = piece.get_location()
+                    self.pieces.append(piece_location)
 
     def draw_board(self):
         """
