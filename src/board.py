@@ -7,6 +7,7 @@ class Board:
         """
         self.board = self.create_board()
         self.store_piece_locations()
+        
 
     def create_board(self):
         """
@@ -19,12 +20,12 @@ class Board:
         for row in range(3):
             for col in range(8):
                 if (row + col) % 2 != 0:
-                    board[row][col] = Piece('Red', (row, col))
+                    board[row][col] = Piece('red', (row, col))
         # Place black pieces
         for row in range(5, 8):
             for col in range(8):
                 if (row + col) % 2 != 0:
-                    board[row][col] = Piece('Black', (row, col))
+                    board[row][col] = Piece('black', (row, col))
 
         return board
     
@@ -63,7 +64,7 @@ class Board:
         Move a piece to a new location
         """
         # Check if the move is valid
-        valid_moves = self.get_valid_moves(piece)
+        valid_moves = self.find_valid_moves_and_jumps(piece)
 
         # Check if the destination is in the list of valid moves
         if (dest_row, dest_col) not in valid_moves:
@@ -73,7 +74,7 @@ class Board:
         # Move the piece
         piece.move(dest_row, dest_col)
         # Check for king promotion
-        if (piece.color == 'Red' and dest_row == 7) or (piece.color == 'Black' and dest_row == 0):
+        if (piece.color == 'red' and dest_row == 7) or (piece.color == 'black' and dest_row == 0):
             piece.promote_to_king()
 
     def find_valid_moves_and_jumps(self, piece):
@@ -99,16 +100,12 @@ class Board:
             valid_jumps.append((new_row, new_col))
 
         # TODO: Make is_collision method to check if the move or jump is a collision with another piece
-        # search other pieces to see if the move will collide
-        for other_piece in self.board:
-            other_piece_location = other_piece.get_location()
-            # remove the location of the other piece from valid moves
-            if other_piece_location in valid_moves:
-                valid_moves.remove(other_piece_location)
-            # remove the location of the other piece from valid jumps
-            if other_piece_location in valid_jumps:
-                valid_jumps.remove(other_piece_location)
 
+        # see if the location is empty
+        for move in valid_moves:
+            if move in self.pieces:
+                valid_moves.remove(move)
+        
         # search other pieces to see if jump is valid
         for potential_jump in valid_jumps:
             jump_row = potential_jump[0]
@@ -130,13 +127,16 @@ class Board:
         over_col = (curr_col + jump_col) // 2
 
         # Check if the piece being jumped over is an opponent's piece
-        for other_piece in self.board:
-            if other_piece.get_location() == (over_row, over_col):
-                return other_piece.color != piece.color # Return True if it's an opponent's piece
+        if self.pieces.__contains__((over_row, over_col)):
+                return self.get_piece(over_row, over_col).color != piece.color #check if the piece is an opponent's piece
+            
         return False   
     
     def remove_piece(self, piece):
         self.board[piece.location] = None
+
+    def get_piece(self, row, col):
+        return self.board[row][col]
 
 
 if __name__ == "__main__":
