@@ -23,7 +23,12 @@ class Piece:
         """
         Promote the piece to a king
         """
+        print(f"Piece at {self.location} promoted to king!")
         self.king = True
+
+        #update potential move and jump directions
+        self.potential_move_directions(self.location)
+        self.potential_jump_directions(self.location)
 
     def move(self, dest_row, dest_col):
         """
@@ -54,15 +59,15 @@ class Piece:
         # Update potential move directions after jumping
         self.potential_move_directions(self.location)
 
-    def potential_move_directions(self, dest_location):
+    def potential_move_directions(self, curr_location):
         """
         Store potential move directions based on the current location of the piece
 
         Args:
-            dest_location: The destination location of the piece on the board (row, col)
+            curr_location: The destination location of the piece on the board (row, col)
         """
         # Reset directions based on current location
-        row, col = dest_location
+        row, col = curr_location
         
         # Determine potential move directions based on king status
         if self.king:
@@ -95,7 +100,7 @@ class Piece:
             if self.move_directions.__contains__((1, 1)):
                 self.move_directions.remove((1, 1))
 
-    def potential_jump_directions(self, dest_location):
+    def potential_jump_directions(self, curr_location):
         """
         Store potential jump directions based on the current location of the piece
 
@@ -103,7 +108,7 @@ class Piece:
             dest_location: The destination location of the piece on the board (row, col)
         """
         # Reset directions based on current location
-        row, col = dest_location
+        row, col = curr_location
 
         # Determine potential jump directions based on king status
         if self.king:

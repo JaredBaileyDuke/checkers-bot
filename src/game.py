@@ -46,14 +46,15 @@ class Game:
             #Make sure move is valid
             valid_moves = self.board.find_valid_moves_and_jumps(self.board.get_piece(start_row, start_col))
             if (dest_row, dest_col) not in valid_moves:
-                print("Invalid move!")
+                print("Invalid move for piece", self.board.get_piece(start_row, start_col))
+                print("Valid moves are: " + str(valid_moves))
                 continue
 
             break
 
         # Get the piece to move
         piece = self.board.get_piece(start_row, start_col)
-        print(piece)
+
         # Move the piece
         self.board.move_piece(piece, dest_row, dest_col)
         print("Moved " + piece.color + " piece from " + start + " to " + end)

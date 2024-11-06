@@ -62,18 +62,21 @@ class Board:
     def move_piece(self, piece, dest_row, dest_col):
         """
         Move a piece to a new location
+        Assuming the move to be made is already validated
         """
-        # Check if the move is valid
-        valid_moves = self.find_valid_moves_and_jumps(piece)
 
-        # Check if the destination is in the list of valid moves
-        if (dest_row, dest_col) not in valid_moves:
-            print("Invalid move!")
-            return
-        
+        # Check if the move is a jump
+        for jump in piece.get_potential_jump_directions():
+            if (dest_row, dest_col) == (piece.get_location()[0] + jump[0], piece.get_location()[1] + jump[1]):
+                # Jump over the opponent's piece
+                curr_row, curr_col = piece.get_location()
+                over_row = (curr_row + dest_row) // 2
+                over_col = (curr_col + dest_col) // 2
+                print("Jumped over", self.get_piece(over_row, over_col))
+                self.remove_piece(self.get_piece(over_row, over_col))
+
         # Move the piece
-        piece_location = piece.get_location()
-        self.board[piece_location[0]][piece_location[1]] = None
+        self.remove_piece(piece)
         piece.move(dest_row, dest_col)
         self.board[dest_row][dest_col] = piece
 
@@ -105,8 +108,6 @@ class Board:
             new_row = curr_row + direction[0]
             new_col = curr_col + direction[1]
             valid_jumps.append((new_row, new_col))
-
-        # TODO: Make is_collision method to check if the move or jump is a collision with another piece
 
         # see if the location is empty
         for move in valid_moves:
@@ -144,7 +145,8 @@ class Board:
         return False   
     
     def remove_piece(self, piece):
-        self.board[piece.location] = None
+        piece_location = piece.get_location()
+        self.board[piece_location[0]][piece_location[1]] = None
 
     def get_piece(self, row, col):
         return self.board[row][col]
