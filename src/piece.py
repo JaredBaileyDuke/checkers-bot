@@ -3,7 +3,7 @@ class Piece:
         """
         Initialize a piece with a specific color
         Args:
-            color, string: The color of the piece (e.g., 'Red' or 'Black')
+            color, string: The color of the piece (e.g., 'red' or 'black')
             location, tuple: The current location of the piece on the board
                 - row: The row of the board (0-7)
                 - col: The column of the board (0-7)
@@ -14,14 +14,22 @@ class Piece:
         self.color = color  # Color of the piece
         self.location = location  # Current location of the piece
         self.king = False  # Indicates if the piece is a king
-        self.directions = []  # List of potential move directions
+        self.move_directions = []  # List of potential move directions
+        self.jump_directions = []
+        self.extra_jump = False
         self.potential_move_directions(self.location) # Initialize potential move directions
+        self.potential_jump_directions(self.location) # Initialize potential jump directions
 
     def promote_to_king(self):
         """
         Promote the piece to a king
         """
+        print(f"Piece at {self.location} promoted to king!")
         self.king = True
+
+        #update potential move and jump directions
+        self.potential_move_directions(self.location)
+        self.potential_jump_directions(self.location)
 
     def move(self, dest_row, dest_col):
         """
@@ -34,51 +42,51 @@ class Piece:
 
         # Update potential move directions after moving the piece
         self.potential_move_directions(self.location)
-
-    def jump(self, dest_row, dest_col):
-        """
-        Jump over an opponent's piece
-        Args:
-            dest_row: The row of the destination location
-            dest_col: The column of the destination location
-        """
-        # Update the location of the piece
-        self.location = (dest_row, dest_col)
-
-        # Update potential jump directions after jumping
+        # Update potential jump directions after moving the piece
         self.potential_jump_directions(self.location)
 
-    def potential_move_directions(self, dest_location):
+    def potential_move_directions(self, curr_location):
         """
         Store potential move directions based on the current location of the piece
 
         Args:
-            dest_location: The destination location of the piece on the board (row, col)
+            curr_location: The destination location of the piece on the board (row, col)
         """
         # Reset directions based on current location
-        row, col = dest_location
+        row, col = curr_location
         
         # Determine potential move directions based on king status
         if self.king:
-            self.directions = [(-1, -1), (-1, 1), (1, -1), (1, 1)]
+            self.move_directions = [(-1, -1), (-1, 1), (1, -1), (1, 1)]
         else:
-            [(-1, -1), (-1, 1)] if self._color == 'Red' else [(1, -1), (1, 1)]
+            if self.color == 'black':
+                self.move_directions = [(-1, -1), (-1, 1)] 
+            else:
+                self.move_directions = [(1, -1), (1, 1)]
 
         # Check for edges of the board, remove options that go off the board
         if row == 0: # Top row
-            self.directions.remove((-1, -1))
-            self.directions.remove((-1, 1))
+            if self.move_directions.__contains__((-1, -1)):
+                self.move_directions.remove((-1, -1))
+            if self.move_directions.__contains__((-1, 1)):
+                self.move_directions.remove((-1, 1))
         elif row == 7: # Bottom row
-            self.directions.remove((1, -1))
-            self.directions.remove((1, 1))
+            if self.move_directions.__contains__((1, -1)):
+                self.move_directions.remove((1, -1))
+            if self.move_directions.__contains__((1, 1)):
+                self.move_directions.remove((1, 1))
         if col == 0: # Left column
-            self.directions.remove((-1, -1))
-            self.directions.remove((1, -1))
+            if self.move_directions.__contains__((-1, -1)):
+                self.move_directions.remove((-1, -1))
+            if self.move_directions.__contains__((1, -1)):
+                self.move_directions.remove((1, -1))
         elif col == 7: # Right column
-            self.directions.remove((-1, 1))
-            self.directions.remove((1, 1))
+            if self.move_directions.__contains__((-1, 1)):
+                self.move_directions.remove((-1, 1))
+            if self.move_directions.__contains__((1, 1)):
+                self.move_directions.remove((1, 1))
 
-    def potential_jump_directions(self, dest_location):
+    def potential_jump_directions(self, curr_location):
         """
         Store potential jump directions based on the current location of the piece
 
@@ -86,27 +94,38 @@ class Piece:
             dest_location: The destination location of the piece on the board (row, col)
         """
         # Reset directions based on current location
-        row, col = dest_location
+        row, col = curr_location
 
         # Determine potential jump directions based on king status
         if self.king:
-            self.directions = [(-2, -2), (-2, 2), (2, -2), (2, 2)]
+            self.jump_directions = [(-2, -2), (-2, 2), (2, -2), (2, 2)]
         else:
-            self.directions = [(-2, -2), (-2, 2)] if self.color == 'Red' else [(2, -2), (2, 2)]
+            if self.color == 'black':
+                self.jump_directions = [(-2, -2), (-2, 2)]
+            else:
+                self.jump_directions = [(2, -2), (2, 2)]
 
         # Check for edges of the board, remove options that go off the board
         if row <= 1: # Top rows
-            self.directions.remove((-2, -2))
-            self.directions.remove((-2, 2))
+            if self.jump_directions.__contains__((-2, -2)):
+                self.jump_directions.remove((-2, -2))
+            if self.jump_directions.__contains__((-2, 2)):
+                self.jump_directions.remove((-2, 2))
         elif row >= 6: # Bottom rows
-            self.directions.remove((2, -2))
-            self.directions.remove((2, 2))
+            if self.jump_directions.__contains__((2, -2)):
+                self.jump_directions.remove((2, -2))
+            if self.jump_directions.__contains__((2, 2)):
+                self.jump_directions.remove((2, 2))
         if col <= 1: # Left columns
-            self.directions.remove((-2, -2))
-            self.directions.remove((2, -2))
+            if self.jump_directions.__contains__((-2, -2)):
+                self.jump_directions.remove((-2, -2))
+            if self.jump_directions.__contains__((2, -2)):
+                self.jump_directions.remove((2, -2))
         elif col >= 6: # Right columns
-            self.directions.remove((-2, 2))
-            self.directions.remove((2, 2))
+            if self.jump_directions.__contains__((-2, 2)):
+                self.jump_directions.remove((-2, 2))
+            if self.jump_directions.__contains__((2, 2)):
+                self.jump_directions.remove((2, 2))
 
     def get_location(self):
         """
@@ -120,17 +139,23 @@ class Piece:
         """
         return self.color
     
-    def get_king_status(self):
+    def get_king(self):
         """
         Return the king status of the piece
         """
         return self.king
     
-    def get_directions(self):
+    def get_potential_move_directions(self):
         """
         Return the potential move directions of the piece
         """
-        return self.directions
+        return self.move_directions
+    
+    def get_potential_jump_directions(self):
+        """
+        Return the potential jump directions of the piece
+        """
+        return self.jump_directions
 
     def __str__(self):
         """
@@ -141,7 +166,7 @@ class Piece:
 
 if __name__ == "__main__":
     # Example usage
-    red_piece = Piece('Red', (2, 3))
+    red_piece = Piece('red', (2, 3))
     print(red_piece)  # Output: R(2, 3)
     red_piece.promote_to_king()
     print(red_piece)  # Output: R(2, 3)K
