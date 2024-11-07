@@ -5,7 +5,7 @@ class Board:
         """
         Initialize the board with pieces in starting positions
         """
-        self.board = self.create_board()
+        self.board, self.pieces = self.create_board()
         self.store_piece_locations()
         
 
@@ -16,30 +16,36 @@ class Board:
             A 2D list representing the board.
         """
         board = [[None for _ in range(8)] for _ in range(8)]
+        pieces = []
         # Place red pieces
         for row in range(3):
             for col in range(8):
                 if (row + col) % 2 != 0:
                     board[row][col] = Piece('red', (row, col))
+                    pieces.append(board[row][col])           
         # Place black pieces
         for row in range(5, 8):
             for col in range(8):
                 if (row + col) % 2 != 0:
                     board[row][col] = Piece('black', (row, col))
+                    pieces.append(board[row][col])
 
-        return board
+        return board, pieces
     
     def store_piece_locations(self):
         """
         Store piece locations in a list for easy access
         """
-        self.pieces = []
-        for i in range(8):
-            for j in range(8):
-                piece = self.board[i][j]
-                if piece is not None:
-                    piece_location = piece.get_location()
-                    self.pieces.append(piece_location)
+        self.piece_locations = []
+        for row in range(8):
+            for col in range(8):
+                if self.board[row][col] is not None:
+                    self.piece_locations.append((row, col))
+        print(self.piece_locations)
+        for piece in self.pieces:
+            #print each piece string without a newline
+            print(piece, end=" ")
+        print()
 
     def draw_board(self):
         """
@@ -64,6 +70,7 @@ class Board:
         Move a piece to a new location
         Assuming the move to be made is already validated
         """
+        jumpped = False
 
         # Check if the move is a jump
         for jump in piece.get_potential_jump_directions():
@@ -74,6 +81,7 @@ class Board:
                 over_col = (curr_col + dest_col) // 2
                 print("Jumped over", self.get_piece(over_row, over_col))
                 self.remove_piece(self.get_piece(over_row, over_col))
+                jumpped = True
 
         # Move the piece
         self.remove_piece(piece)
@@ -87,32 +95,69 @@ class Board:
         #update piece locations
         self.store_piece_locations()
 
-    def find_valid_moves_and_jumps(self, piece):
+        #check for extra jumps if a jump was made
+        if jumpped:
+            valid_jumps = self.find_valid_jumps(piece)
+            if len(valid_jumps) > 0:
+                piece.extra_jump = True
+            else:
+                piece.extra_jump = False
+
+    def find_valid_moves_and_jumps(self, piece, only_jumps=False):
+        """
+        Get a list of all valid moves and jumps for a given piece.
+        """
+        if only_jumps:
+            return self.find_valid_jumps(piece)
+        
+        valid_moves = self.find_valid_moves(piece)
+        valid_jumps = self.find_valid_jumps(piece)
+
+        return valid_moves + valid_jumps
+    
+    def find_valid_moves(self, piece):
         """
         Get a list of valid moves for a given piece.
         """
         valid_moves = []
-        valid_jumps = []
         curr_row, curr_col = piece.get_location()
 
         # Get potential move directions
         move_directions = piece.get_potential_move_directions()
-        jump_directions = piece.get_potential_jump_directions()
 
         # Add potential moves to valid moves, including adding to current position
         for direction in move_directions:
             new_row = curr_row + direction[0]
             new_col = curr_col + direction[1]
             valid_moves.append((new_row, new_col))
+
+        # see if the location is empty
+        for move in valid_moves:
+            if move in self.piece_locations:
+                valid_moves.remove(move)
+
+        return valid_moves
+    
+    def find_valid_jumps(self, piece):
+        """
+        Get a list of valid jumps for a given piece.
+        """
+        valid_jumps = []
+        curr_row, curr_col = piece.get_location()
+
+        # Get potential move directions
+        jump_directions = piece.get_potential_jump_directions()
+
+        # Add potential moves to valid moves, including adding to current position
         for direction in jump_directions:
             new_row = curr_row + direction[0]
             new_col = curr_col + direction[1]
             valid_jumps.append((new_row, new_col))
 
         # see if the location is empty
-        for move in valid_moves:
-            if move in self.pieces:
-                valid_moves.remove(move)
+        for move in valid_jumps:
+            if move in self.piece_locations:
+                valid_jumps.remove(move)
         
         # search other pieces to see if jump is valid
         for potential_jump in valid_jumps:
@@ -122,7 +167,7 @@ class Board:
             if not self.is_valid_jump(piece, jump_row, jump_col):
                 valid_jumps.remove(potential_jump)
 
-        return valid_moves + valid_jumps
+        return valid_jumps
 
     def is_valid_jump(self, piece, jump_row, jump_col):
         """
@@ -144,6 +189,16 @@ class Board:
             
         return False   
     
+    def find_color_pieces(self, color):
+        """
+        Get a list of all pieces for a given color.
+        """
+        color_pieces = []
+        for piece in self.pieces:
+            if piece.color == color:
+                color_pieces.append(piece)
+        return color_pieces
+
     def remove_piece(self, piece):
         piece_location = piece.get_location()
         self.board[piece_location[0]][piece_location[1]] = None

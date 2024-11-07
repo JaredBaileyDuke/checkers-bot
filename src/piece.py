@@ -16,6 +16,7 @@ class Piece:
         self.king = False  # Indicates if the piece is a king
         self.move_directions = []  # List of potential move directions
         self.jump_directions = []
+        self.extra_jump = False
         self.potential_move_directions(self.location) # Initialize potential move directions
         self.potential_jump_directions(self.location) # Initialize potential jump directions
 
@@ -43,21 +44,6 @@ class Piece:
         self.potential_move_directions(self.location)
         # Update potential jump directions after moving the piece
         self.potential_jump_directions(self.location)
-
-    def jump(self, dest_row, dest_col):
-        """
-        Jump over an opponent's piece
-        Args:
-            dest_row: The row of the destination location
-            dest_col: The column of the destination location
-        """
-        # Update the location of the piece
-        self.location = (dest_row, dest_col)
-
-        # Update potential jump directions after jumping
-        self.potential_jump_directions(self.location)
-        # Update potential move directions after jumping
-        self.potential_move_directions(self.location)
 
     def potential_move_directions(self, curr_location):
         """
