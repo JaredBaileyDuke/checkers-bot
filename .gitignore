@@ -1,4 +1,2 @@
 .venv/
-EL_API_KEY.txt
-GPT_API_KEY.txt
-VOICE_ID.txt
+.apis/
