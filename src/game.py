@@ -135,8 +135,8 @@ class Game:
             if self.turn == 'red':
                 self.user_turn()
             else:
-                # self.ai_turn()
-                self.user_turn()
+                self.ai_turn()
+                # self.user_turn()
             if self.check_winner():
                 break
             self.switch_turn()

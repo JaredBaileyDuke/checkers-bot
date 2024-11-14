@@ -41,11 +41,6 @@ class Board:
             for col in range(8):
                 if self.board[row][col] is not None:
                     self.piece_locations.append((row, col))
-        print(self.piece_locations)
-        for piece in self.pieces:
-            #print each piece string without a newline
-            print(piece, end=" ")
-        print()
 
     def draw_board(self):
         """
@@ -131,11 +126,16 @@ class Board:
             new_col = curr_col + direction[1]
             valid_moves.append((new_row, new_col))
 
+        i = 0
         # see if the location is empty
-        for move in valid_moves:
-            if move in self.piece_locations:
-                valid_moves.remove(move)
-
+        while i < len(valid_moves):
+            if valid_moves[i] in self.piece_locations:
+                valid_moves.remove(valid_moves[i])
+                i -= 1
+                if i >= len(valid_moves):
+                    break
+            i += 1
+                
         return valid_moves
     
     def find_valid_jumps(self, piece):
@@ -154,18 +154,25 @@ class Board:
             new_col = curr_col + direction[1]
             valid_jumps.append((new_row, new_col))
 
+        i = 0
         # see if the location is empty
-        for move in valid_jumps:
-            if move in self.piece_locations:
-                valid_jumps.remove(move)
+        while i < len(valid_jumps):
+            if valid_jumps[i] in self.piece_locations:
+                valid_jumps.remove(valid_jumps[i])
+                i -= 1
+                if i >= len(valid_jumps):
+                    break
+            i += 1
         
+        i = 0
         # search other pieces to see if jump is valid
-        for potential_jump in valid_jumps:
-            jump_row = potential_jump[0]
-            jump_col = potential_jump[1]
-            # Check if there is an opponent's piece to jump over
-            if not self.is_valid_jump(piece, jump_row, jump_col):
-                valid_jumps.remove(potential_jump)
+        while i < len(valid_jumps):
+            if not self.is_valid_jump(piece, valid_jumps[i][0], valid_jumps[i][1]):
+                valid_jumps.remove(valid_jumps[i])
+                i -= 1
+                if i >= len(valid_jumps):
+                    break
+            i += 1
 
         return valid_jumps
 
@@ -205,6 +212,12 @@ class Board:
 
     def get_piece(self, row, col):
         return self.board[row][col]
+    
+    def print_pieces(self):
+        for piece in self.pieces:
+            #print each piece string without a newline
+            print(piece, end=" ")
+        print()
 
 
 if __name__ == "__main__":
