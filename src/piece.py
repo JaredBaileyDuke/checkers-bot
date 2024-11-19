@@ -26,7 +26,7 @@ class Piece:
         """
         Promote the piece to a king
         """
-        print(f"Piece at {self.location} promoted to king!")
+        print(f"Piece at {self.get_location()} promoted to king!")
         self.king = True
 
         # Update potential move and jump directions
