@@ -106,7 +106,43 @@ class Game:
         Args:
             restricted_jump, tuple: location - since a jump occurred, the AI must continue jumping with the same piece
         """
-        pass
+        # If no restricted jump, choose a random piece
+        if restricted_jump is None: 
+            # Get all pieces of the given color
+            valid_pieces = self.board.find_color_pieces(self.turn)
+            valid_moves = []
+
+            # Look through pieces to find one that can jump, choose the first piece that can jump
+            for p in valid_pieces:
+                piece = p
+                valid_moves = self.board.find_valid_moves_and_jumps(p, only_jumps=True)
+                if len(valid_moves) > 0:
+                    dest = valid_moves[0]
+                    break
+            
+            # If no jumps, make a random move
+            if len(valid_moves) == 0:
+                self.make_random_move()
+                return
+        
+        # If a restricted jump, choose the piece that must jump
+        else:
+            temp_piece = self.board.get_piece(restricted_jump[0], restricted_jump[1]) # Get the piece that must jump
+            valid_moves = self.board.find_valid_moves_and_jumps(temp_piece, only_jumps=True) # Get all valid jumps for the piece
+            piece, dest = temp_piece, valid_moves[0]
+
+        # Get piece location, and destination location
+        start_row, start_col = piece.get_location()
+        dest_row, dest_col = dest
+
+        # Move the piece
+        self.board.move_piece(piece, dest_row, dest_col)
+        print("Moved " + piece.color + " piece from " + chr(start_col + ord('A')) + str(start_row + 1) + " to " + chr(dest_col + ord('A')) + str(dest_row + 1))
+
+        # Check if the piece can make an extra jump
+        if piece.extra_jump:
+            print("Extra jump available!")
+            self.make_prefer_jumps(restricted_jump=(dest_row, dest_col))
 
     def make_random_move(self, restricted_jump=None):
         """
@@ -183,10 +219,10 @@ class Game:
         """
         while True:
             if self.turn == 'red':
-                self.ai_turn(difficulty="Random")
+                self.ai_turn(difficulty="Prefer Jumps")
                 # self.user_turn()
             else:
-                self.ai_turn(difficulty="Random")
+                self.ai_turn(difficulty="Prefer Jumps")
                 # self.user_turn()
             if self.check_winner():
                 break
