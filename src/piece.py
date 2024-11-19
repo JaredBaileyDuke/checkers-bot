@@ -2,11 +2,13 @@ class Piece:
     def __init__(self, color, location):
         """
         Initialize a piece with a specific color
+
         Args:
             color, string: The color of the piece (e.g., 'red' or 'black')
             location, tuple: The current location of the piece on the board
                 - row: The row of the board (0-7)
                 - col: The column of the board (0-7)
+        
         Attributes:
             color: The color of the piece
             king: A boolean indicating if the piece is a king
@@ -27,27 +29,30 @@ class Piece:
         print(f"Piece at {self.location} promoted to king!")
         self.king = True
 
-        #update potential move and jump directions
+        # Update potential move and jump directions
         self.potential_move_directions(self.location)
         self.potential_jump_directions(self.location)
 
     def move(self, dest_row, dest_col):
         """
         Move the piece to a new location
+
         Args:
-            new_location: The new location of the piece on the board (0-32)
+            dest_row: The row of the destination location
+            dest_col: The column of the destination location
         """
         # Update the location of the piece
         self.location = (dest_row, dest_col)
 
-        # Update potential move directions after moving the piece
+        # Update potential move and jump directions
         self.potential_move_directions(self.location)
-        # Update potential jump directions after moving the piece
         self.potential_jump_directions(self.location)
 
     def potential_move_directions(self, curr_location):
         """
         Store potential move directions based on the current location of the piece
+
+        This method does not account for other pieces on the board
 
         Args:
             curr_location: The destination location of the piece on the board (row, col)
@@ -90,8 +95,10 @@ class Piece:
         """
         Store potential jump directions based on the current location of the piece
 
+        This method does not account for other pieces on the board
+
         Args:
-            dest_location: The destination location of the piece on the board (row, col)
+            curr_location: The destination location of the piece on the board (row, col)
         """
         # Reset directions based on current location
         row, col = curr_location
