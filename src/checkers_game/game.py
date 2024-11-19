@@ -89,6 +89,8 @@ class Game:
             self.make_minimax_move()
         elif difficulty == "Prefer Jumps":
             self.make_prefer_jumps()
+        elif difficulty == "LLM":
+            self.make_llm_move()
 
     def make_minimax_move(self, restricted_jump=None):
         """
@@ -98,6 +100,32 @@ class Game:
             restricted_jump, tuple: location - since a jump occurred, the AI must continue jumping with the same piece
         """
         pass
+
+    def make_llm_move(self, restricted_jump=None):
+        """
+        Make a move by calling a LLM model
+
+        Args:
+            restricted_jump, tuple: location - since a jump occurred, the AI must continue jumping with the same piece
+        """
+        prompt = f"\
+            You are an AI playing checkers. Choose the next move as {self.turn}. It must be in the form of (current piece, next piece) \n\
+            For example: (A3, B4) \n\
+            Use the following board information to make your decision: \n\
+            "
+        
+        i = 0
+        for piece in self.board.get_pieces():
+            prompt += f"Piece {i}: \n\
+            Location: {piece.get_location()} \n\
+            Color: {piece.get_color()} \n\
+            King: {piece.get_king()} \n\
+            "
+            
+            i += 1
+
+        # Gather the current board state
+        pieces = self.board.get_pieces()
 
     def make_prefer_jumps(self, restricted_jump=None):
         """
@@ -219,7 +247,7 @@ class Game:
         """
         while True:
             if self.turn == 'red':
-                self.ai_turn(difficulty="Random")
+                self.ai_turn(difficulty="Prefer Jumps")
                 # self.user_turn()
             else:
                 self.ai_turn(difficulty="Prefer Jumps")
