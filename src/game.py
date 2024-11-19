@@ -1,5 +1,6 @@
 from board import Board
 import random
+from time import sleep
 
 class Game:
     def __init__(self):
@@ -113,8 +114,9 @@ class Game:
         Get the best move for the AI
         """
         if restricted_jump is not None:
-            valid_moves = self.board.find_valid_moves_and_jumps(self.board.get_piece(restricted_jump[0], restricted_jump[1]), only_jumps=True)
-            return valid_moves[0]
+            temp_piece = self.board.get_piece(restricted_jump[0], restricted_jump[1])
+            valid_moves = self.board.find_valid_moves_and_jumps(temp_piece, only_jumps=True)
+            return temp_piece, valid_moves[0]
         
         return self.choose_random_move(color)
     
@@ -138,7 +140,8 @@ class Game:
     def play(self):
         while True:
             if self.turn == 'red':
-                self.user_turn()
+                self.ai_turn()
+                # self.user_turn()
             else:
                 self.ai_turn()
                 # self.user_turn()
@@ -146,6 +149,7 @@ class Game:
                 break
             self.switch_turn()
             self.board.print_pieces()
+            sleep(1)
 
 if __name__ == "__main__":
     game = Game()
