@@ -6,6 +6,8 @@ class Board:
         Initialize the board with pieces in starting positions
         """
         self.board, self.pieces = self.create_board()
+        self.red_count = 12
+        self.black_count = 12
         self.store_piece_locations()
         
 
@@ -75,7 +77,12 @@ class Board:
                 over_row = (curr_row + dest_row) // 2
                 over_col = (curr_col + dest_col) // 2
                 print("Jumped over", self.get_piece(over_row, over_col))
-                self.remove_piece(self.get_piece(over_row, over_col))
+                self.remove_piece(self.get_piece(over_row, over_col), remove_from_list=True)
+                # Update the count of pieces
+                if piece.color == 'red':
+                    self.black_count -= 1
+                else:
+                    self.red_count -= 1
                 jumpped = True
 
         # Move the piece
@@ -206,9 +213,11 @@ class Board:
                 color_pieces.append(piece)
         return color_pieces
 
-    def remove_piece(self, piece):
+    def remove_piece(self, piece, remove_from_list=False):
         piece_location = piece.get_location()
         self.board[piece_location[0]][piece_location[1]] = None
+        if remove_from_list:
+            self.pieces.remove(piece)
 
     def get_piece(self, row, col):
         return self.board[row][col]
@@ -218,7 +227,6 @@ class Board:
             #print each piece string without a newline
             print(piece, end=" ")
         print()
-
 
 if __name__ == "__main__":
     game_board = Board()

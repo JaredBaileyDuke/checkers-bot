@@ -91,20 +91,19 @@ class Game:
             self.user_turn(restricted_jump=(dest_row, dest_col))
 
     def check_winner(self):
-        red_pieces = 0
-        black_pieces = 0
-        
-        for row in self.board.board:
-            for piece in row:
-                if piece is not None:
-                    if piece.color == 'red':
-                        red_pieces += 1
-                    else:
-                        black_pieces += 1
+        red_pieces = self.board.red_count
+        black_pieces = self.board.black_count
+
+        #print the counts of each color
+        print("Red pieces:", red_pieces)
+        print("Black pieces:", black_pieces)
+    
         if red_pieces == 0:
+            self.board.draw_board()
             print("Black wins!")
             return True
         elif black_pieces == 0:
+            self.board.draw_board()
             print("Red wins!")
             return True
         return False
@@ -117,12 +116,18 @@ class Game:
             valid_moves = self.board.find_valid_moves_and_jumps(self.board.get_piece(restricted_jump[0], restricted_jump[1]), only_jumps=True)
             return valid_moves[0]
         
-        valid_moves = []
-        piece = None
+        return self.choose_random_move(color)
+    
+    def choose_random_move(self, color):
+        """
+        Choose a random move for the AI
+        """
+        valid_pieces = self.board.find_color_pieces(color)
+        random.shuffle(valid_pieces)
+        piece = valid_pieces[0]
 
+        valid_moves = self.board.find_valid_moves_and_jumps(piece)
         while len(valid_moves) == 0:
-            #choose a random piece for now
-            valid_pieces = self.board.find_color_pieces(color)
             random.shuffle(valid_pieces)
             piece = valid_pieces[0]
             valid_moves = self.board.find_valid_moves_and_jumps(piece)
@@ -140,6 +145,7 @@ class Game:
             if self.check_winner():
                 break
             self.switch_turn()
+            self.board.print_pieces()
 
 if __name__ == "__main__":
     game = Game()

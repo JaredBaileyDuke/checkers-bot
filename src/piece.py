@@ -163,6 +163,9 @@ class Piece:
         """
         return f"{self.color[0].upper()}{self.location}{'K' if self.king else ''}"
     
+    def __eq__(self, other):
+        return self.color == other.color and self.location == other.location and self.king == other.king
+    
 
 if __name__ == "__main__":
     # Example usage
