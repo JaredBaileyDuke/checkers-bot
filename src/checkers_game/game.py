@@ -1,6 +1,8 @@
 from board import Board
 import random
 from time import sleep
+import openai
+import os
 
 class Game:
     def __init__(self):
@@ -101,7 +103,7 @@ class Game:
         """
         pass
 
-    def make_llm_move(self, restricted_jump=None):
+    def make_llm_move(self):
         """
         Make a move by calling a LLM model
 
@@ -109,23 +111,89 @@ class Game:
             restricted_jump, tuple: location - since a jump occurred, the AI must continue jumping with the same piece
         """
         prompt = f"\
-            You are an AI playing checkers. Choose the next move as {self.turn}. It must be in the form of (current piece, next piece) \n\
-            For example: (A3, B4) \n\
+            Choose the next move as {self.turn}. It must be in the form of: piece number, \
+                destination row, destination column \n\
+            For example: 3,0,7 \n\n\
             Use the following board information to make your decision: \n\
             "
         
-        i = 0
-        for piece in self.board.get_pieces():
-            prompt += f"Piece {i}: \n\
-            Location: {piece.get_location()} \n\
-            Color: {piece.get_color()} \n\
-            King: {piece.get_king()} \n\
-            "
-            
-            i += 1
+        for color in ["red", "black"]:
+            i = 0
+            for piece in self.board.find_color_pieces(color):
+                prompt += f"Piece {i}: \n\
+                Color: {piece.get_color()} \n\
+                Location: {piece.get_location()} \n\
+                King: {piece.get_king()} \n\
+                Valid Moves: {self.board.find_valid_moves_and_jumps(piece, only_jumps=False)} \n\n\
+                "   
+                i += 1
 
-        # Gather the current board state
-        pieces = self.board.get_pieces()
+
+        prompt += "Rememeber to use the format of 5, 7, 0. Your move: "
+        # print(prompt)
+
+        try:
+            # read in api key from file
+            script_dir = os.path.dirname(os.path.abspath(__file__))
+            file_path = os.path.join(script_dir, ".apis", "CHATGPT.txt")
+            with open(file_path, 'r') as f:
+                api_key = f.read().strip()
+
+            # call the LLM model to get the next move
+            response = self.call_openai_api(prompt, api_key)
+            print("LLM Response: ", response)
+
+            # Parse the response to get the move
+            piece_num, dest_row, dest_col = response.split(',')
+            print(piece_num, dest_row, dest_col)
+            piece = self.board.find_color_pieces(self.turn)[int(piece_num)]
+            dest_row, dest_col = int(dest_row), int(dest_col)
+
+            # prints
+            print(f"Color: {piece.get_color()} \n\
+                Location: {piece.get_location()} \n\
+                King: {piece.get_king()} \n\n")
+            print(f"Destination: {dest_row}, {dest_col}")
+
+            # Move the piece               
+            self.board.move_piece(piece, dest_row, dest_col)
+            print("LLM Moved " + piece.color)
+
+        except:
+            print("Error making move with LLM")
+            self.make_prefer_jumps()
+
+        # Check if the piece can make an extra jump
+        if piece.extra_jump:
+            print("Extra jump available!")
+            self.make_prefer_jumps(restricted_jump=(dest_row, dest_col))
+
+
+    def call_openai_api(self, prompt, key):
+        """
+        Call the OpenAI API to get the next move
+
+        Args:
+            prompt, str: The prompt to send to the API
+            key, str: The API key
+
+        Returns:
+            str: The response from the API
+        """
+        
+        openai.api_key = key
+
+        response = openai.ChatCompletion.create(
+            model='gpt-4',
+            messages=[
+                {'role': 'system', 'content': "You are an AI playing checkers. You must carefully and accurately choose your next move. Rememeber to use the format: 5, 7, 0."},
+                {'role': 'user', 'content': prompt},
+            ],
+            max_tokens=150,
+            temperature=0.7,
+        )
+
+        return response.choices[0].message['content'].strip()
 
     def make_prefer_jumps(self, restricted_jump=None):
         """
@@ -250,13 +318,13 @@ class Game:
                 self.ai_turn(difficulty="Prefer Jumps")
                 # self.user_turn()
             else:
-                self.ai_turn(difficulty="Prefer Jumps")
+                self.ai_turn(difficulty="LLM")
                 # self.user_turn()
             if self.check_winner():
                 break
             self.switch_turn()
             self.board.print_pieces()
-            sleep(1)
+            sleep(3)
 
 if __name__ == "__main__":
     game = Game()
