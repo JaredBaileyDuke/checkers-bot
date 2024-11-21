@@ -1,4 +1,4 @@
-from board import Board
+from board import Board, Piece
 import random
 from time import sleep
 import openai
@@ -11,7 +11,9 @@ class Game:
         """
         self.board = Board()
         self.turn = 'red'  # Starting player
+        self.opponent = 'black'
         self.valid_moves = {}
+        self.tie = False
 
     def switch_turn(self):
         """
@@ -19,8 +21,10 @@ class Game:
         """
         if self.turn == 'red':
             self.turn = 'black'
+            self.opponent = 'red'
         else:
             self.turn = 'red'
+            self.opponent = 'black'
 
     def user_turn(self, show_board=True, restricted_jump=None):
         """
@@ -101,7 +105,83 @@ class Game:
         Args:
             restricted_jump, tuple: location - since a jump occurred, the AI must continue jumping with the same piece
         """
-        pass
+        # If no restricted jump, do a minimax search
+        if restricted_jump is None: 
+            result = self.minimax(5, True, self.board)[1]
+            piece, dest = result
+
+        # If a restricted jump, choose the piece that must jump
+        else: 
+            temp_piece: Piece = self.board.get_piece(restricted_jump[0], restricted_jump[1]) # Get the piece that must jump
+            valid_moves = self.board.find_valid_moves_and_jumps(temp_piece, only_jumps=True) # Get all valid jumps for the piece
+            piece, dest =  temp_piece, valid_moves[0]
+
+        # Get piece location, and destination location
+        start_row, start_col = piece.get_location()
+        dest_row, dest_col = dest
+        
+        # Move the piece
+        self.board.move_piece(piece, dest_row, dest_col)
+        print("Moved " + piece.color + " piece from " + chr(start_col + ord('A')) + str(start_row + 1) + " to " + chr(dest_col + ord('A')) + str(dest_row + 1))
+
+        # Check if the piece can make an extra jump
+        if piece.extra_jump:
+            self.make_minimax_move(restricted_jump=(dest_row, dest_col))
+
+    def minimax(self, depth: int, maximizing_player: bool, board: Board) -> tuple[float, tuple[Piece, tuple[int, int]]]:
+        """
+        Minimax algorithm to find the best move for the AI
+
+        Args:
+            depth, int: The depth of the search tree
+            maximizing_player, bool: Whether the AI is the maximizing player
+
+        Returns:
+            int: The evaluation score
+        """
+        # Base case
+        if depth == 0 or self.check_winner(show_board=False):
+            return self.evaluate(), None
+        
+        best_move: None | tuple[Piece, float, tuple[int, int]] = None
+        max_eval = float('-inf') if maximizing_player else float('inf')
+
+        for piece in board.find_color_pieces(self.turn):
+            for move in board.find_valid_moves_and_jumps(piece):
+                dest =  move
+                # Get piece location, and destination location
+                dest_row, dest_col = dest
+                # Move the piece
+                board_copy = board.clone()
+                board_copy.move_piece(piece, dest_row, dest_col)
+                eval = self.minimax(depth - 1, False, board_copy)[0]
+                if maximizing_player:
+                    if eval > max_eval:
+                        best_move = (piece, move)
+                    max_eval = max(max_eval, eval)
+                else:
+                    if eval < max_eval:
+                        best_move = (piece, move)
+                    max_eval = max(max_eval, eval)
+
+        return max_eval, best_move
+
+    def evaluate(self):
+        """
+        Evaluate the board state for the AI
+
+        Returns:
+            int: The evaluation score
+        """
+        #count the number of pieces for each color
+        red_pieces = self.board.red_count
+        black_pieces = self.board.black_count
+
+        #return the difference in the number of pieces
+        if self.turn == 'red':
+            return (red_pieces - black_pieces)*2
+        else:
+            return (black_pieces - red_pieces)
 
     def make_llm_move(self):
         """
@@ -130,7 +210,6 @@ class Game:
 
 
         prompt += "Rememeber to use the format of 5, 7, 0. Your move: "
-        # print(prompt)
 
         try:
             # read in api key from file
@@ -167,7 +246,6 @@ class Game:
         if piece.extra_jump:
             print("Extra jump available!")
             self.make_prefer_jumps(restricted_jump=(dest_row, dest_col))
-
 
     def call_openai_api(self, prompt, key):
         """
@@ -249,22 +327,14 @@ class Game:
         """
         # If no restricted jump, choose a random piece
         if restricted_jump is None: 
-            # Get all pieces of the given color
-            valid_pieces = self.board.find_color_pieces(self.turn)
-            valid_moves = []
-
-            # Choose a random piece
-            while len(valid_moves) == 0: # If no valid moves, choose a different piece randomly
-                # Choose a piece randomly
-                random.shuffle(valid_pieces)
-                piece = valid_pieces[0]
-
-                # Get random moves
-                valid_moves = self.board.find_valid_moves_and_jumps(piece)
-
-            # Choose a random move
+            valid_moves = self.find_valid_moves(self.turn)
+            if len(valid_moves) == 0:
+                self.tie = True
+                return None
+            #shuffle the list of valid moves
             random.shuffle(valid_moves)
-            dest = valid_moves[0]
+            piece, dest = valid_moves[0]
+            print(piece, dest)
 
         # If a restricted jump, choose the piece that must jump
         else: 
@@ -284,28 +354,57 @@ class Game:
         if piece.extra_jump:
             print("Extra jump available!")
             self.make_random_move(restricted_jump=(dest_row, dest_col))
+    
+    def find_valid_moves(self, color):
+        """
+        Find all valid moves for a given color
 
-    def check_winner(self):
+        Args:
+            color, str: The color of the pieces
+
+        Returns:
+            list: The list of valid moves for the given color
+        """
+        pieces: list[Piece] = self.board.find_color_pieces(color)
+        valid_moves: list[list[tuple[int,int]]] = []
+        for piece in pieces:
+            for move in self.board.find_valid_moves_and_jumps(piece):
+                valid_moves.append((piece, move))
+        return valid_moves
+
+    def check_winner(self, show_board=True, tie = False):
         """
         Check if the game is over and print the winner
+
+        Args:
+            show_board, bool: Whether to show the board and print the winner
 
         Returns:
             bool: True if the game is over, False otherwise
         """
+
         red_pieces = self.board.red_count
         black_pieces = self.board.black_count
 
-        #print the counts of each color
-        print("Red pieces:", red_pieces)
-        print("Black pieces:", black_pieces)
+        if show_board:
+            #print the counts of each color
+            print("Red pieces:", red_pieces)
+            print("Black pieces:", black_pieces)
     
         if red_pieces == 0:
-            self.board.draw_board()
-            print("Black wins!")
+            if show_board: 
+                self.board.draw_board()
+                print("Black wins!")
             return True
         elif black_pieces == 0:
-            self.board.draw_board()
-            print("Red wins!")
+            if show_board:
+                self.board.draw_board()
+                print("Red wins!")
+            return True
+        elif self.tie:
+            if show_board:
+                self.board.draw_board()
+                print("It's a tie!")
             return True
         return False
     
@@ -315,16 +414,22 @@ class Game:
         """
         while True:
             if self.turn == 'red':
+                # self.ai_turn(difficulty="Random")
                 self.ai_turn(difficulty="Prefer Jumps")
+                # self.ai_turn(difficulty="LLM")
+                # self.ai_turn(difficulty="Minimax")
                 # self.user_turn()
             else:
-                self.ai_turn(difficulty="LLM")
+                # self.ai_turn(difficulty="Random")
+                # self.ai_turn(difficulty="Prefer Jumps")
+                # self.ai_turn(difficulty="LLM")
+                self.ai_turn(difficulty="Minimax")
                 # self.user_turn()
             if self.check_winner():
                 break
             self.switch_turn()
             self.board.print_pieces()
-            sleep(3)
+            sleep(0.5)
 
 if __name__ == "__main__":
     game = Game()

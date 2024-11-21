@@ -1,5 +1,5 @@
 class Piece:
-    def __init__(self, color, location):
+    def __init__(self, color, location, king=False):
         """
         Initialize a piece with a specific color
 
@@ -26,8 +26,20 @@ class Piece:
         """
         Promote the piece to a king
         """
-        print(f"Piece at {self.get_location()} promoted to king!")
+        # print(f"Piece at {self.get_location()} promoted to king!")
         self.king = True
+
+        # Update potential move and jump directions
+        self.potential_move_directions(self.location)
+        self.potential_jump_directions(self.location)
+
+    def demote_from_king(self, print_message=False):
+        """
+        Demote the piece from a king
+        """
+        if print_message:
+            print(f"Piece at {self.get_location()} demoted from king!")
+        self.king = False
 
         # Update potential move and jump directions
         self.potential_move_directions(self.location)
@@ -42,7 +54,7 @@ class Piece:
             dest_col: The column of the destination location
         """
         # Update the location of the piece
-        self.location = (dest_row, dest_col)
+        self.location: tuple[int,int] = (dest_row, dest_col)
 
         # Update potential move and jump directions
         self.potential_move_directions(self.location)
@@ -164,6 +176,12 @@ class Piece:
         """
         return self.jump_directions
 
+    def clone(self):
+        """
+        Return a copy of the piece
+        """
+        return Piece(self.color, self.location, self.king)
+
     def __str__(self):
         """
         Return a string representation of the piece
@@ -171,7 +189,7 @@ class Piece:
         return f"{self.color[0].upper()}{self.location}{'K' if self.king else ''}"
     
     def __eq__(self, other):
-        return self.color == other.color and self.location == other.location and self.king == other.king
+        return self.color == other.color and self.location == other.location
     
 
 if __name__ == "__main__":
