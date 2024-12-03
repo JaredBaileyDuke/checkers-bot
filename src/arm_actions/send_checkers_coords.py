@@ -2,6 +2,7 @@ from pymycobot.mycobot import MyCobot
 import sys
 import os
 from time import sleep
+import electromagnet_gpio
 sys.path.append(os.path.dirname(__file__))
 
 def convert_to_angles(checker_space):
@@ -46,7 +47,7 @@ def angle_space_before_after(angles):
 
     return angles_ba
 
-def angle_move(mc, checker_space, sleep_time):
+def angle_move(mc, checker_space, sleep_time, magnet="off"):
     """
     Give movements based on entered checker space
     For use with operational space
@@ -55,6 +56,7 @@ def angle_move(mc, checker_space, sleep_time):
         mc, object: MyCobot object
         checker_space, str: Space on checkerboard (ex. a8)
         sleep_time, int: Rest time between robot movements
+        magnet, str: Electromagnet relay setting
 
     Returns:
         None
@@ -68,6 +70,8 @@ def angle_move(mc, checker_space, sleep_time):
     sleep(sleep_time)
     mc.send_angles(angles, speed)
     sleep(sleep_time)
+    electromagnet(relay=magnet)
+    sleep(1)
     mc.send_angles(angles_ba, speed)
     sleep(sleep_time)
 
@@ -111,7 +115,7 @@ def coord_space_before_after(checker_coordinates):
 
     return checker_coordinates_ba
 
-def coord_move(mc, checker_space, sleep_time):
+def coord_move(mc, checker_space, sleep_time, magnet="off"):
     """
     Give movements based on entered checker space
     For use with operational space
@@ -120,6 +124,7 @@ def coord_move(mc, checker_space, sleep_time):
         mc, object: MyCobot object
         checker_space, str: Space on checkerboard (ex. a7)
         sleep_time, int: Rest time between robot movements
+        magnet, str: Electromagnet relay setting
 
     Returns:
         None
@@ -133,6 +138,8 @@ def coord_move(mc, checker_space, sleep_time):
     sleep(sleep_time)
     mc.send_coords(coords, speed, 0)
     sleep(sleep_time)
+    electromagnet(relay=magnet)
+    sleep(1)
     mc.send_coords(coords_ba, speed, 0)
     sleep(sleep_time)
 
@@ -154,11 +161,11 @@ if __name__ == "__main__":
 
         # top numbers (8's)
         if checker_space[0].lower() in "abcdefgh" and int(checker_space[1]) == 8:
-            angle_move(mc, checker_space, sleep_time=3)
+            angle_move(mc, checker_space, sleep_time=3, magnet="on")
         
         # numbers 1-7
         elif checker_space[0].lower() in "abcdefgh" and int(checker_space[1]) in range(1,8):
-            coord_move(mc, checker_space, sleep_time=3)
+            coord_move(mc, checker_space, sleep_time=3, magnet="on")
         
         # invalid move
         else:
