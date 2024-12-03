@@ -32,20 +32,12 @@ def process_color(image, lower, upper, color_name):
             (x, y), radius = cv2.minEnclosingCircle(contour)
             center = (int(x), int(y))
             centers.append(center)
-
-            # Optionally, draw the circle and center on the image
-            # cv2.circle(image, center, int(radius), (0, 255, 0), 2)
-            # cv2.circle(image, center, 2, (0, 0, 255), -1)
-            # cv2.putText(image, color_name, (center[0]+10, center[1]), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 2)
-
+            
     return centers
 
 if __name__ == "__main__":
     # Load the image
-    image = cv2.imread("images/test_image.jpg")
-
-    # save the image
-    cv2.imwrite("images/test_image_2.jpg", image)
+    image = cv2.imread("sample_images/2.jpg")
 
     # Check if the image was loaded properly
     if image is None:
@@ -55,29 +47,20 @@ if __name__ == "__main__":
     # Create a copy of the image to draw on
     output_image = image.copy()
 
-    # Define the HSV ranges for orange, green, and pink
+    # Define the HSV ranges for orange and green
     # Orange color range 
     # RGB of 242, 120, 7
-    lower_orange = (12, 200, 200)
-    upper_orange = (18, 255, 255)
+    lower_orange = (10, 120, 120)
+    upper_orange = (20, 255, 255)
 
     # Green color range 
     # RGB of 3, 108, 76
     lower_green = (76, 100, 100)
     upper_green = (86, 255, 255)
 
-    # Pink color ranges (due to hue wrapping)
-    lower_pink1 = (160, 100, 100)
-    upper_pink1 = (179, 255, 255)
-    lower_pink2 = (0, 100, 100)
-    upper_pink2 = (10, 255, 255)
-
     # Process each color and find centers
     centers_orange = process_color(image, lower_orange, upper_orange, "Orange")
     centers_green = process_color(image, lower_green, upper_green, "Green")
-    centers_pink1 = process_color(image, lower_pink1, upper_pink1, "Pink")
-    centers_pink2 = process_color(image, lower_pink2, upper_pink2, "Pink")
-    centers_pink = centers_pink1 + centers_pink2  # Combine both pink ranges
 
     # Print and annotate the centers for each color
     print("Orange centers:")
@@ -107,18 +90,5 @@ if __name__ == "__main__":
                      2
                      )
 
-    print("\nPink centers:")
-    for center in centers_pink:
-        print(center)
-        cv2.circle(output_image, center, 5, (255, 0, 255), -1)  # BGR color for pink
-        cv2.putText(output_image, 
-                    "Pink", 
-                    (center[0]+10, center[1]), 
-                    cv2.FONT_HERSHEY_SIMPLEX, 
-                    0.5, 
-                    (255, 0, 255), 
-                    2
-                    )
-
     # Save the output image with centers marked
-    cv2.imwrite("images/filtered_image_with_centers.jpg", output_image)
+    cv2.imwrite("sample_images/filtered_image_with_centers.jpg", output_image)
