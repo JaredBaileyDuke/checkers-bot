@@ -2,7 +2,7 @@ from pymycobot.mycobot import MyCobot
 import sys
 import os
 from time import sleep
-import electromagnet_gpio
+from electromagnet_gpio import *
 sys.path.append(os.path.dirname(__file__))
 
 def convert_to_angles(checker_space):
