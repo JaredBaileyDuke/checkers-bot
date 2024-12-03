@@ -414,8 +414,8 @@ class Game:
         """
         while True:
             if self.turn == 'red':
-                # self.ai_turn(difficulty="Random")
-                self.ai_turn(difficulty="Prefer Jumps")
+                self.ai_turn(difficulty="Random")
+                # self.ai_turn(difficulty="Prefer Jumps")
                 # self.ai_turn(difficulty="LLM")
                 # self.ai_turn(difficulty="Minimax")
                 # self.user_turn()
