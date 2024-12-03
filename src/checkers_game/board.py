@@ -10,7 +10,6 @@ class Board:
         self.black_count = 12
         self.store_piece_locations()
         
-
     def create_board(self):
         """
         Initialize an 8x8 board with starting positions
@@ -19,8 +18,8 @@ class Board:
             board, list of lists: A 2D matrix representing the board, contains pieces
             pieces, list: A list of all pieces on the board
         """
-        board = [[None for _ in range(8)] for _ in range(8)]
-        pieces = []
+        board: list[list[None | Piece]] = [[None for _ in range(8)] for _ in range(8)]
+        pieces: list[Piece] = []
         # Place red pieces
         for row in range(3):
             for col in range(8):
@@ -41,10 +40,27 @@ class Board:
         Store piece locations in a list for easy access, especially by AI
         """
         self.piece_locations = []
+        num_pieces = 0
         for row in range(8):
             for col in range(8):
                 if self.board[row][col] is not None:
+                    # print("Piece found: ", self.get_piece(row, col))
                     self.piece_locations.append((row, col))
+                    num_pieces += 1
+                    if self.get_piece(row, col) not in self.pieces:
+                        print("Piece not found in pieces list")
+                        print("Piece: ", self.get_piece(row, col))
+                        self.print_pieces()
+                        #throw an error
+                        raise ValueError("Piece not found in pieces list")
+        
+        #check to see if the piece list is the same as the piece locations
+        if len(self.piece_locations) != len(self.pieces):
+            print("Piece locations and pieces list lengths are not the same")
+            print("Piece Locations: ", self.piece_locations)
+            print("Pieces: ")
+            self.print_pieces()
+            raise ValueError("Piece locations and pieces list lengths are not the same, piece locations: " + str(len(self.piece_locations)) + " pieces: " + str(len(self.pieces)))
 
     def draw_board(self):
         """
@@ -74,16 +90,39 @@ class Board:
             dest_row, int: The row to move the piece to
             dest_col, int: The column to move the piece to
         """
+        #make sure the piece is in the list of pieces
+        flag = False
+        #make sure the piece is in the list of pieces
+        for other_piece in self.pieces:
+            if other_piece == piece:
+                flag = True
+                #check if they are the same piece object
+                if other_piece is not piece:
+                    #set the piece to the piece in the list
+                    # print("Piece object mismatch")
+                    piece = other_piece
+                break
+
+        if not flag:
+            print("Piece: ", piece)
+            print("Piece List: ")
+            self.print_pieces()
+            print("attempting to move to ", dest_row, dest_col)
+            raise ValueError("Tried to move a piece not found in list of pieces")
+            
         jumped = False
 
         # Check if the move is a jump
-        for jump in piece.get_potential_jump_directions():
+        jump_directions = piece.get_potential_jump_directions()
+        for jump in jump_directions:
             if (dest_row, dest_col) == (piece.get_location()[0] + jump[0], piece.get_location()[1] + jump[1]):
                 # Jump over the opponent's piece
                 curr_row, curr_col = piece.get_location()
                 over_row = (curr_row + dest_row) // 2
                 over_col = (curr_col + dest_col) // 2
-                print("Jumped over", self.get_piece(over_row, over_col))
+                # print("jump_directions: ", jump_directions)
+                # print(piece, "attempting to jump over", over_row, over_col)
+                # print("Jumped over", self.get_piece(over_row, over_col))
                 self.remove_piece(self.get_piece(over_row, over_col), remove_from_list=True)
 
                 # Update the count of pieces
@@ -96,6 +135,8 @@ class Board:
 
         # Move the piece
         self.remove_piece(piece)
+        # print("Moved: ", piece, " to ", dest_row, dest_col)
+        # self.print_pieces()
         piece.move(dest_row, dest_col)
         self.board[dest_row][dest_col] = piece
 
@@ -105,6 +146,7 @@ class Board:
 
         # update piece locations
         self.store_piece_locations()
+        # print("Finished moving piece and storing piece locations")
 
         # check for extra jumps if a jump was made
         if jumped:
@@ -113,6 +155,63 @@ class Board:
                 piece.extra_jump = True
             else:
                 piece.extra_jump = False
+        else:
+            piece.extra_jump = False
+        
+        return piece
+    
+    def undo_move(self, piece, dest_row, dest_col):
+        """
+        Undo a move made by a piece
+
+        Args:
+            piece, Piece: The piece to undo the move for
+            dest_row, int: The row the piece will be moved back to
+            dest_col, int: The column the piece will be moved back to
+        """
+        flag = False
+        #make sure the piece is in the list of pieces
+        for other_piece in self.pieces:
+            if other_piece == piece:
+                flag = True
+                #check if they are the same piece object
+                if other_piece is not piece:
+                    #set the piece to the piece in the list
+                    # print("Piece object mismatch")
+                    piece = other_piece
+                break
+
+        if not flag:
+            print("Piece not found in list of pieces")
+            print("Piece: ", piece)
+            print("Piece List: ")
+            self.print_pieces()
+            raise ValueError("Piece not found in list of pieces")
+                
+        #if the piece was promoted to a king, demote it
+        if piece.get_king():
+            piece.demote_from_king()
+
+        old_location = piece.get_location()
+
+        # Check if a piece was jumped over
+        if abs(old_location[0] - dest_row) == 2:
+            curr_row, curr_col = piece.get_location()
+            over_row = (curr_row + dest_row) // 2
+            over_col = (curr_col + dest_col) // 2
+            self.add_piece(Piece('black' if piece.color == 'red' else 'red', (over_row, over_col)))
+        
+        #move it back to the original location
+        self.remove_piece(piece)
+        piece.move(dest_row, dest_col)
+        self.board[dest_row][dest_col] = piece
+        # print("Moved back: ", piece, " from ", old_location, " to ", piece.get_location())
+
+        # Update piece locations
+        self.store_piece_locations()
+        # print("Finished undoing move")
+
+        return piece
 
     def find_valid_moves_and_jumps(self, piece, only_jumps=False):
         """
@@ -122,6 +221,7 @@ class Board:
             piece, Piece: The piece to find valid moves and jumps for
             only_jumps, bool: Whether to only find jumps
         """
+        # self.store_piece_locations()
         # Get valid jumps only
         if only_jumps:
             return self.find_valid_jumps(piece)
@@ -141,8 +241,8 @@ class Board:
 
         Returns:
             valid_moves, list of tuples: A list of valid moves for the given piece
-        """
-        valid_moves = []
+        """        
+        valid_moves: list[tuple[int, int]] = []
         curr_row, curr_col = piece.get_location()
 
         # Get potential move directions
@@ -177,7 +277,7 @@ class Board:
         Returns:
             valid_jumps, list of tuples: A list of valid jumps for the given piece
         """
-        valid_jumps = []
+        valid_jumps: list[tuple[int, int]] = []
         curr_row, curr_col = piece.get_location()
 
         # Get potential move directions
@@ -236,6 +336,7 @@ class Board:
 
         # Check if the piece being jumped over is an opponent's piece
         if self.get_piece(over_row, over_col) is not None:
+            # print("Jumping over: ", self.get_piece(over_row, over_col))
             return self.get_piece(over_row, over_col).color != piece.color #check if the piece is an opponent's piece
             
         return False   
@@ -275,9 +376,46 @@ class Board:
 
         # Remove the piece from the list of pieces
         if remove_from_list:
-            self.pieces.remove(piece) # Remove the piece from the list of pieces
+            try: self.pieces.remove(piece) # Remove the piece from the list of pieces
+            except ValueError:
+                print ("Piece not found in list of pieces")
+                print ("Piece: ", piece)
+                print ("Piece List: ")
+                self.print_pieces()
+                quit()
 
-    def get_piece(self, row, col):
+    def add_piece(self, piece):
+        """
+        Add a piece to the board
+
+        Args:
+            piece, Piece: The piece to add
+
+        Returns:
+            bool: Whether the piece was added successfully
+        """
+        # Get the location of the piece
+        piece_location = piece.get_location()
+
+        #if there is already a piece at the location, return False
+        if self.get_piece(piece_location[0], piece_location[1]) is not None:
+            return False
+
+        # Add the piece to the board
+        self.board[piece_location[0]][piece_location[1]] = piece
+
+        # Add the piece to the list of pieces
+        self.pieces.append(piece)
+
+        #update piece color counts
+        if piece.color == 'red':
+            self.red_count += 1
+        else:
+            self.black_count += 1
+        # print("Restored: ", piece)
+        return True
+
+    def get_piece(self, row, col) -> Piece | None:
         """
         Get the piece at a given location
 
@@ -298,6 +436,22 @@ class Board:
             #print each piece string without a newline
             print(piece, end=" ")
         print()
+
+    def clone(self) -> 'Board':
+        """
+        Create a deep copy of the board
+
+        Returns:
+            board, Board: A deep copy of the board
+        """
+        new_board = Board()
+        new_board.board = [row[:] for row in self.board]
+        new_board.pieces = [p.clone() for p in self.pieces]
+        new_board.red_count = self.red_count
+        new_board.black_count = self.black_count
+        new_board.store_piece_locations()
+        # print("Finished cloning??")
+        return new_board
 
 if __name__ == "__main__":
     game_board = Board()
