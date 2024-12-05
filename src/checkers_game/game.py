@@ -76,6 +76,17 @@ class Game:
 
             break
 
+        # Get the piece to move
+        piece = self.board.get_piece(start_row, start_col)
+
+        # Move the piece
+        self.board.move_piece(piece, dest_row, dest_col)
+        print("Moved " + piece.color + " piece from " + start + " to " + end)
+
+        if piece.extra_jump:
+            print("Extra jump available!")
+            self.user_turn(restricted_jump=(dest_row, dest_col))
+
     def ai_turn(self, difficulty="Random", restricted_jump=None):
         """
         AI turn logic with difficulty setting
@@ -83,6 +94,9 @@ class Game:
 
         Args:
             restricted_jump, tuple: since a jump occurred, the AI must continue jumping with the same piece
+
+        Returns:
+            str: The move in the format 'A3 B4'
         """
         # Show the board and print the current player's turn
         self.board.draw_board()
@@ -90,13 +104,15 @@ class Game:
 
         # Get the best move for the AI
         if difficulty == "Random":
-            self.make_random_move()
+            move = self.make_random_move()
         elif difficulty == "Minimax":
-            self.make_minimax_move()
+            move = self.make_minimax_move()
         elif difficulty == "Prefer Jumps":
-            self.make_prefer_jumps()
+            move = self.make_prefer_jumps()
         elif difficulty == "LLM":
-            self.make_llm_move()
+            move = self.make_llm_move()
+        
+        return move
 
     def make_minimax_move(self, restricted_jump=None):
         """
@@ -324,6 +340,9 @@ class Game:
 
         Args:
             restricted_jump, tuple: location - since a jump occurred, the AI must continue jumping with the same piece
+
+        Returns:
+            str: The move in the format 'A3 B4'
         """
         # If no restricted jump, choose a random piece
         if restricted_jump is None: 
@@ -350,10 +369,17 @@ class Game:
         self.board.move_piece(piece, dest_row, dest_col)
         print("Moved " + piece.color + " piece from " + chr(start_col + ord('A')) + str(start_row + 1) + " to " + chr(dest_col + ord('A')) + str(dest_row + 1))
 
+        #Get move in a string (e.g., 'A3 B4')
+        move = chr(start_col + ord('A')) + str(start_row + 1) + " " + chr(dest_col + ord('A')) + str(dest_row + 1)
+
         # Check if the piece can make an extra jump
         if piece.extra_jump:
             print("Extra jump available!")
-            self.make_random_move(restricted_jump=(dest_row, dest_col))
+            previous_move = move
+            move = self.make_random_move(restricted_jump=(dest_row, dest_col))
+            move = previous_move + ", " + move
+
+        return move
     
     def find_valid_moves(self, color):
         """
@@ -414,21 +440,21 @@ class Game:
         """
         while True:
             if self.turn == 'red':
-                self.ai_turn(difficulty="Random")
-                # self.ai_turn(difficulty="Prefer Jumps")
-                # self.ai_turn(difficulty="LLM")
-                # self.ai_turn(difficulty="Minimax")
+                print(self.ai_turn(difficulty="Random"))
+                # print(self.ai_turn(difficulty="Prefer Jumps"))
+                # print(self.ai_turn(difficulty="LLM"))
+                # print(self.ai_turn(difficulty="Minimax"))
                 # self.user_turn()
             else:
-                # self.ai_turn(difficulty="Random")
-                # self.ai_turn(difficulty="Prefer Jumps")
-                # self.ai_turn(difficulty="LLM")
-                self.ai_turn(difficulty="Minimax")
+                print(self.ai_turn(difficulty="Random"))
+                # print(self.ai_turn(difficulty="Prefer Jumps"))
+                # print(self.ai_turn(difficulty="LLM"))
+                # print(self.ai_turn(difficulty="Minimax"))
                 # self.user_turn()
             if self.check_winner():
                 break
             self.switch_turn()
-            self.board.print_pieces()
+            # self.board.print_pieces()
             sleep(0.5)
 
 if __name__ == "__main__":
