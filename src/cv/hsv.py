@@ -1,7 +1,15 @@
+"""
+Functions to process an image and find objects of a specific color using HSV color space.
+
+process_color(image, lower, upper, color_name) - Process the image to find objects of a specific color 
+    and compute their center points.
+
+"""
+
 import cv2
 import numpy as np
 
-def process_color(image, lower, upper, color_name):
+def process_color(image, color_name):
     """
     Process the image to find objects of a specific color and compute their center points.
 
@@ -14,6 +22,17 @@ def process_color(image, lower, upper, color_name):
     Returns:
         List of tuples: List of center points (x, y) for detected objects.
     """
+    # Lower case the color name
+    color_name = color_name.lower()
+
+    # Define the HSV ranges for orange and green
+    if color_name == "orange":
+        lower = (10, 120, 120)
+        upper = (20, 255, 255)
+    elif color_name == "green":
+        lower = (76, 100, 100)
+        upper = (86, 255, 255)
+
     # Convert to HSV color space
     hsv = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
 
@@ -32,12 +51,12 @@ def process_color(image, lower, upper, color_name):
             (x, y), radius = cv2.minEnclosingCircle(contour)
             center = (int(x), int(y))
             centers.append(center)
-            
+
     return centers
 
 if __name__ == "__main__":
     # Load the image
-    image = cv2.imread("sample_images/2.jpg")
+    image = cv2.imread("sample_images/8.jpg")
 
     # Check if the image was loaded properly
     if image is None:
@@ -47,20 +66,9 @@ if __name__ == "__main__":
     # Create a copy of the image to draw on
     output_image = image.copy()
 
-    # Define the HSV ranges for orange and green
-    # Orange color range 
-    # RGB of 242, 120, 7
-    lower_orange = (10, 120, 120)
-    upper_orange = (20, 255, 255)
-
-    # Green color range 
-    # RGB of 3, 108, 76
-    lower_green = (76, 100, 100)
-    upper_green = (86, 255, 255)
-
     # Process each color and find centers
-    centers_orange = process_color(image, lower_orange, upper_orange, "Orange")
-    centers_green = process_color(image, lower_green, upper_green, "Green")
+    centers_orange = process_color(image, "Orange")
+    centers_green = process_color(image, "Green")
 
     # Print and annotate the centers for each color
     print("Orange centers:")
