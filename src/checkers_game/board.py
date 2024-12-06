@@ -1,4 +1,4 @@
-from piece import Piece
+from .piece import Piece
 
 class Board:
     def __init__(self):
@@ -8,6 +8,8 @@ class Board:
         self.board, self.pieces = self.create_board()
         self.red_count = 12
         self.black_count = 12
+        self.red_king_count = 0
+        self.black_king_count = 0
         self.store_piece_locations()
         
     def create_board(self):
@@ -135,14 +137,16 @@ class Board:
 
         # Move the piece
         self.remove_piece(piece)
-        # print("Moved: ", piece, " to ", dest_row, dest_col)
-        # self.print_pieces()
         piece.move(dest_row, dest_col)
         self.board[dest_row][dest_col] = piece
 
         # Check for king promotion
         if (piece.color == 'red' and dest_row == 7) or (piece.color == 'black' and dest_row == 0):
-            piece.promote_to_king()
+            #if it is not already a king update king counts
+            if not piece.get_king():
+                if piece.color == 'red': self.red_king_count += 1
+                if piece.color == 'black': self.black_king_count += 1
+                piece.promote_to_king()
 
         # update piece locations
         self.store_piece_locations()
