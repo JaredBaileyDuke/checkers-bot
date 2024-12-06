@@ -124,7 +124,6 @@ class Game:
         # If no restricted jump, do a minimax search
         if restricted_jump is None: 
             score, result = self.minimax(depth, True, self.board)
-            print(score)
             if result is None:
                 self.tie = True
                 return "No moves available"
@@ -210,15 +209,14 @@ class Game:
         black_pieces = board.black_count
 
         red_kings = board.red_king_count
-        black_king_increase = board.black_king_count - self.board.black_king_count
+        black_kings = board.black_king_count
 
         #return the difference in the number of pieces
         if self.turn == 'red':
-            black_decrease = self.board.black_count - black_pieces
-            score = (red_pieces - black_pieces) - black_king_increase + black_decrease * 20
+            score = (red_pieces - black_pieces) - black_kings + red_kings*5
             return score
         else:
-            score = (black_pieces - red_pieces)
+            score = (black_pieces - red_pieces) - red_kings
             return score
 
     def make_llm_move(self):
@@ -227,6 +225,9 @@ class Game:
 
         Args:
             restricted_jump, tuple: location - since a jump occurred, the AI must continue jumping with the same piece
+
+        Returns:
+            str: The move in the format 'A3 B4'
         """
         prompt = f"\
             Choose the next move as {self.turn}. It must be in the form of: piece number, \
@@ -266,6 +267,9 @@ class Game:
             piece = self.board.find_color_pieces(self.turn)[int(piece_num)]
             dest_row, dest_col = int(dest_row), int(dest_col)
 
+            # Get piece location
+            start_row, start_col = piece.get_location()
+
             # prints
             print(f"Color: {piece.get_color()} \n\
                 Location: {piece.get_location()} \n\
@@ -276,15 +280,22 @@ class Game:
             self.board.move_piece(piece, dest_row, dest_col)
             print("LLM Moved " + piece.color)
 
+            #Get move in a string (e.g., 'A3 B4')
+            move = chr(start_col + ord('A')) + str(start_row + 1) + " " + chr(dest_col + ord('A')) + str(dest_row + 1)
+
         except:
             print("Error making move with LLM")
-            self.make_prefer_jumps()
+            move = self.make_prefer_jumps()
 
         # Check if the piece can make an extra jump
         if piece.extra_jump:
             print("Extra jump available!")
-            self.make_prefer_jumps(restricted_jump=(dest_row, dest_col))
+            previous_move = move
+            move = self.make_prefer_jumps(restricted_jump=(dest_row, dest_col))
+            move = previous_move + ", " + move
 
+        return move
+            
     def call_openai_api(self, prompt, key):
         """
         Call the OpenAI API to get the next move
