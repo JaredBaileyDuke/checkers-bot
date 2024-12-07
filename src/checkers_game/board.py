@@ -363,6 +363,19 @@ class Board:
                 color_pieces.append(piece)
 
         return color_pieces
+    
+    def remove_all_pieces(self):
+        """
+        Remove all pieces from the board
+        """
+        for piece in self.pieces:
+            self.remove_piece(piece, remove_from_list=True)
+        self.pieces = []
+        self.red_count = 0
+        self.black_count = 0
+        self.red_king_count = 0
+        self.black_king_count = 0
+        self.store_piece_locations()
 
     def remove_piece(self, piece, remove_from_list=False):
         """

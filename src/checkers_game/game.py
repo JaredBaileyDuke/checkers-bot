@@ -26,11 +26,12 @@ class Game:
             self.turn = 'red'
             self.opponent = 'black'
 
-    def user_turn(self, show_board=True, restricted_jump=None):
+    def user_turn(self, move = None, show_board=False, restricted_jump=None):
         """
         User turn logic
 
         Args:
+            move, str: The move in the format 'A3 B4'
             show_board, bool: Whether to show the board
             restricted_jump, tuple: piece location - since a jump occurred, the user must continue jumping with the same piece
         """
@@ -40,29 +41,36 @@ class Game:
         #Get and parse user input
         while True:
             # Get user input for piece selection and move
-            user_input = input("Enter your move (e.g., 'A3 B4'): ")
+            if move is None:
+                user_input = input("Enter your move (e.g., 'A3 B4'): ")
+            else:
+                user_input = move
 
             try:
                 start, end = user_input.split()
                 start_row, start_col = int(start[1]) - 1, ord(start[0].upper()) - ord('A')
                 dest_row, dest_col = int(end[1]) - 1, ord(end[0].upper()) - ord('A')  
             except (ValueError, IndexError):
+                move = None
                 print("Invalid input. Please enter in the format 'A3 B4'.")
                 continue
 
             #if a jump is restricted, make sure the user jumps with that piece
             if restricted_jump is not None:
                 if (start_row, start_col) != restricted_jump:
+                    move = None
                     print("You must jump with the piece at", chr(restricted_jump[1] + ord('A')) + str(restricted_jump[0] + 1))
                     continue
 
             #Make sure piece exists in the start location
             if self.board.get_piece(start_row, start_col) is None:
+                move = None
                 print("No piece at that location!")
                 continue
 
             #Make sure piece is the correct color
             if self.board.get_piece(start_row, start_col).color != self.turn:
+                move = None
                 print("Wrong color piece! It's " + self.turn + "'s turn.")
                 print("You are trying to move a " + self.board.get_piece(start_row, start_col).color + " piece.")
                 continue
@@ -70,6 +78,7 @@ class Game:
             #Make sure move is valid
             valid_moves = self.board.find_valid_moves_and_jumps(self.board.get_piece(start_row, start_col), restricted_jump is not None)
             if (dest_row, dest_col) not in valid_moves:
+                move = None
                 print("Invalid move for piece", self.board.get_piece(start_row, start_col))
                 print("Valid moves are: " + str(valid_moves))
                 continue
@@ -87,7 +96,7 @@ class Game:
             print("Extra jump available!")
             self.user_turn(restricted_jump=(dest_row, dest_col))
 
-    def ai_turn(self, difficulty="Random", restricted_jump=None, minimax_depth=3):
+    def ai_turn(self, difficulty="Random", show_board = False, restricted_jump=None, minimax_depth=3):
         """
         AI turn logic with difficulty setting
         - Random: Choose a random move
@@ -99,7 +108,7 @@ class Game:
             str: The move in the format 'A3 B4'
         """
         # Show the board and print the current player's turn
-        self.board.draw_board()
+        if show_board: self.board.draw_board()
         print(f"{self.turn.capitalize()}'s turn")
 
         # Get the best move for the AI
@@ -216,7 +225,7 @@ class Game:
             score = (red_pieces - black_pieces) - black_kings + red_kings*5
             return score
         else:
-            score = (black_pieces - red_pieces) - red_kings
+            score = (black_pieces - red_pieces) - red_kings + black_kings*5
             return score
 
     def make_llm_move(self):
@@ -494,6 +503,7 @@ class Game:
                 break
             self.switch_turn()
             # self.board.print_pieces()
+            self.board.draw_board()
             sleep(0.5)
 
 if __name__ == "__main__":

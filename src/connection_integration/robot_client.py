@@ -14,6 +14,13 @@ def connect_to_robot():
 
     return client_socket
 
+def receive_message(client_socket):
+    # Receive the server's response
+    message = client_socket.recv(1024).decode('utf-8')
+    print(f"Received: {message}")
+
+    return message
+
 def main():
     client_socket = connect_to_robot()
 
