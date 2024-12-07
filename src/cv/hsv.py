@@ -32,6 +32,9 @@ def process_color(image, color_name):
     elif color_name == "green":
         lower = (76, 100, 100)
         upper = (86, 255, 255)
+    elif color_name == "purple":
+        lower = (125, 100, 100)
+        upper = (150, 200, 200)
 
     # Convert to HSV color space
     hsv = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
@@ -56,7 +59,7 @@ def process_color(image, color_name):
 
 if __name__ == "__main__":
     # Load the image
-    image = cv2.imread("sample_images/8.jpg")
+    image = cv2.imread("sample_images/30.jpg")
 
     # Check if the image was loaded properly
     if image is None:
@@ -69,6 +72,7 @@ if __name__ == "__main__":
     # Process each color and find centers
     centers_orange = process_color(image, "Orange")
     centers_green = process_color(image, "Green")
+    centers_purple = process_color(image, "Purple")
 
     # Print and annotate the centers for each color
     print("Orange centers:")
@@ -97,6 +101,21 @@ if __name__ == "__main__":
                      (76, 108, 3), 
                      2
                      )
+        
+    print("\nPurple centers:")
+    for center in centers_purple:
+        print(center)
+        cv2.circle(output_image, center, 5, (169, 54, 104), -1)  # BGR color for purple
+        cv2.putText(output_image, 
+                    "Purple", 
+                    (center[0]+10, 
+                     center[1]), 
+                     cv2.FONT_HERSHEY_SIMPLEX, 
+                     0.5, 
+                     (169, 54, 104), 
+                     2
+                     )
+
 
     # Save the output image with centers marked
     cv2.imwrite("sample_images/filtered_image_with_centers.jpg", output_image)

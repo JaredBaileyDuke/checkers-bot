@@ -144,6 +144,7 @@ def return_piece_locations(rotated_image, board_square_centers):
     """
     centers_orange = process_color(rotated_image, "Orange")
     centers_green = process_color(rotated_image, "Green")
+    centers_purple = process_color(rotated_image, "Purple")
 
     # Create a dictionary of piece locations and center points
     piece_locations = {}
@@ -164,7 +165,24 @@ def return_piece_locations(rotated_image, board_square_centers):
                     square_name = name
 
             # Add the piece location to the dictionary
-            piece_locations[square_name] = (closest_square, color)
+            piece_locations[square_name] = [closest_square, color, False] # True for King
+
+    # Find the purple pieces (Kings)
+    for center in centers_purple:
+        # Find the closest board square center
+        min_distance = float("inf")
+        closest_square = None
+        square_name = ""
+        for name, loc in board_square_centers.items():
+            # Calculate the Euclidean distance
+            distance = sqrt((center[0] - loc[0])**2 + (center[1] - loc[1])**2)
+            if distance < min_distance:
+                min_distance = distance
+                closest_square = loc
+                square_name = name
+
+        # Add the King designation to the dictionary
+        piece_locations[square_name][2] = True
 
     return piece_locations
 
@@ -173,7 +191,7 @@ def return_piece_locations(rotated_image, board_square_centers):
 
 if __name__ == "__main__":
     # Load the image
-    image = cv2.imread("sample_images/10.jpg")
+    image = cv2.imread("sample_images/30.jpg")
 
     if image is None:
         print("Error: Could not load image.")
@@ -208,4 +226,4 @@ if __name__ == "__main__":
 
     # Print the piece locations
     for location, details in piece_locations.items():
-        print(location, details[0], details[1])
+        print(location, details[0], details[1], details[2])
