@@ -5,11 +5,11 @@ import openai
 import os
 
 class Game:
-    def __init__(self):
+    def __init__(self, board_mode="classic", layout = ['RE2', 'BD3K', 'BB5', 'BB7', 'BD7', 'BF5']):
         """
         Set up the game
         """
-        self.board = Board()
+        self.board = Board(mode=board_mode, layout=layout)
         self.turn = 'red'  # Starting player
         self.opponent = 'black'
         self.valid_moves = {}
