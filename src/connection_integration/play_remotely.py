@@ -96,7 +96,7 @@ def play_with_robot(game, socket, cap, speaking = True, delay = 0):
             user = True
             if not user:
                 robot_turn(game, message, socket, speaking = speaking)
-            else:
+            elif cap:
                 #give the user 5 seconds to make a move
                 print("You have 5 seconds to make a move")
                 for i in range(5):
@@ -107,6 +107,11 @@ def play_with_robot(game, socket, cap, speaking = True, delay = 0):
                 piece_locations = tp.cv_process_image(frame)
                 layout = tp.return_board_layout(piece_locations)
                 game = Game(board_mode = mode, layout = layout, start_player = 'red')
+            else:
+                user_input = input("Enter your move (e.g., 'a3 b4'): ")
+                if user_input == "exit":
+                    return "exit"
+                game.user_turn(user_input)
         else:
             # message = game.ai_turn(difficulty="Random")
             message = game.ai_turn(difficulty="Prefer Jumps")
@@ -149,13 +154,18 @@ if __name__ == "__main__":
     # client_socket = rc.connect_to_robot()
     client_socket = None #for testing only (if you don't have a robot to connect to)
 
-    cap = tp.initialize_webcam()
+    # cap = tp.initialize_webcam()
+    cap = None #for testing only (if you don't have a webcam)
 
     #start the game
-    mode = 'custom' # 'classic' or 'custom'
-    frame = tp.capture_frame(cap)
-    piece_locations = tp.cv_process_image(frame)
-    layout = tp.return_board_layout(piece_locations)
+    if cap:
+        mode = 'custom' # 'classic' or 'custom'
+        frame = tp.capture_frame(cap)
+        piece_locations = tp.cv_process_image(frame)
+        layout = tp.return_board_layout(piece_locations)
+    else:
+        mode = 'classic'
+        layout = None
     game = Game(board_mode = mode, layout = layout)
     game.board.draw_board()
 
