@@ -21,16 +21,17 @@ Third return the squares occupied by each piece.
 import cv2
 import numpy as np
 from math import sqrt
-from hsv import *
-from april_tags import *
+from .hsv import *
+from .april_tags import *
 
-def find_board_square_centers(image, center_points):
+def find_board_square_centers(image, center_points, hold_display=False):
     """
     Find the center of each board square.
 
     Args:
         image (np.ndarray): The rotated image.
         center_points (dict): Dictionary of AprilTag number (int) and center points (x, y).
+        hold_display (bool): Whether to hold the display window open.
 
     Returns:
         List of tuples: List of center points (x, y) for each board square.
@@ -75,7 +76,6 @@ def find_board_square_centers(image, center_points):
     for name in name_list:
         board_square_centers[name] = (0, 0)
 
-
     # Calculate the center of each board square
     if first_case == 1: # Diagonal case 1
         col_count = 0
@@ -85,7 +85,6 @@ def find_board_square_centers(image, center_points):
             loc = (int(first_center[0] + x_distance * (0.04 + (7 - row_count) * x_perc)),
                         int(first_center[1] + y_distance * (0.03 + col_count * y_perc)))
             board_square_centers[name] = loc
-            print(loc)
 
             # Increment row and column counts
             general_count += 1
@@ -105,7 +104,6 @@ def find_board_square_centers(image, center_points):
             loc = (int(first_center[0] + x_distance * (0.04 + (7 - row_count) * x_perc)),
                         int(first_center[1] - y_distance * (0.03 + col_count * y_perc)))
             board_square_centers[name] = loc
-            print(loc)
 
             # Increment row and column counts
             general_count += 1
@@ -125,11 +123,11 @@ def find_board_square_centers(image, center_points):
 
     # Display the image
     cv2.imshow("Board Square Centers", image)
-    cv2.waitKey(0)
-    cv2.destroyAllWindows()
+    if hold_display:
+        cv2.waitKey(0)
+        cv2.destroyAllWindows()
 
     return board_square_centers
-
 
 def return_piece_locations(rotated_image, board_square_centers):
     """
@@ -182,12 +180,12 @@ def return_piece_locations(rotated_image, board_square_centers):
                 square_name = name
 
         # Add the King designation to the dictionary
-        piece_locations[square_name][2] = True
+        try:
+            piece_locations[square_name][2] = True
+        except KeyError:
+            print("Error: Could not find a matching piece location for the King.")
 
     return piece_locations
-
-
-    
 
 if __name__ == "__main__":
     # Load the image
@@ -219,11 +217,11 @@ if __name__ == "__main__":
     center_points = detect_apriltags(rotated_image)
 
     # Find the center of each board square
-    board_square_centers = find_board_square_centers(rotated_image, center_points)
+    board_square_centers = find_board_square_centers(rotated_image, center_points, hold_display=True)
 
     # Return the squares occupied by each piece
     piece_locations = return_piece_locations(rotated_image, board_square_centers)
-
+    
     # Print the piece locations
     for location, details in piece_locations.items():
         print(location, details[0], details[1], details[2])

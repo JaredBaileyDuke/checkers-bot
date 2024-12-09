@@ -33,7 +33,7 @@ def process_color(image, color_name):
         lower = (76, 100, 100)
         upper = (86, 255, 255)
     elif color_name == "purple":
-        lower = (125, 100, 100)
+        lower = (125, 50, 50)
         upper = (150, 200, 200)
 
     # Convert to HSV color space

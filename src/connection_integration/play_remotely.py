@@ -5,6 +5,8 @@ from checkers_game.game import Game
 from voice_clone import voice_clone
 from time import sleep
 import pygame
+from cv import take_photo as tp
+import cv2
 
 def adapt_to_robot(message, game):
     '''
@@ -78,7 +80,7 @@ def robot_turn(game, message, socket, speaking = True, delay = 0):
     while speaking and pygame.mixer.music.get_busy():
         pass
 
-def play_with_robot(game, socket, speaking = True, delay = 0):
+def play_with_robot(game, socket, cap, speaking = True, delay = 0):
     """
     Game loop for robot play
     """
@@ -88,13 +90,23 @@ def play_with_robot(game, socket, speaking = True, delay = 0):
             # message = game.ai_turn(difficulty="Random")
             # message = game.ai_turn(difficulty="Prefer Jumps")
             # message = game.ai_turn(difficulty="LLM")
-            message = game.ai_turn(difficulty="Minimax", minimax_depth=3)
-            # self.user_turn()
+            # message = game.ai_turn(difficulty="Minimax", minimax_depth=3)
 
             #if the robot is playing
-            user = False
+            user = True
             if not user:
                 robot_turn(game, message, socket, speaking = speaking)
+            else:
+                #give the user 5 seconds to make a move
+                print("You have 5 seconds to make a move")
+                for i in range(5):
+                    sleep(1)
+                    print(5-i)
+                # Capture the frame
+                frame = tp.capture_frame(cap)
+                piece_locations = tp.cv_process_image(frame)
+                layout = tp.return_board_layout(piece_locations)
+                game = Game(board_mode = mode, layout = layout, start_player = 'red')
         else:
             # message = game.ai_turn(difficulty="Random")
             message = game.ai_turn(difficulty="Prefer Jumps")
@@ -134,16 +146,21 @@ def play_with_robot(game, socket, speaking = True, delay = 0):
             return message
 
 if __name__ == "__main__":
-    try:
-        # client_socket = rc.connect_to_robot()
-        client_socket = None #for testing only (if you don't have a robot to connect to)
+    # client_socket = rc.connect_to_robot()
+    client_socket = None #for testing only (if you don't have a robot to connect to)
 
-        #start the game
-        mode = 'custom' # 'classic' or 'custom'
-        layout = ['RE2', 'BD3K', 'BB5', 'BB7', 'BD7', 'BF7']
-        game = Game(board_mode = mode, layout = layout)
-        game.board.draw_board()
-        if play_with_robot(game, client_socket, speaking=False, delay=0.5) == "exit":
+    cap = tp.initialize_webcam()
+
+    #start the game
+    mode = 'custom' # 'classic' or 'custom'
+    frame = tp.capture_frame(cap)
+    piece_locations = tp.cv_process_image(frame)
+    layout = tp.return_board_layout(piece_locations)
+    game = Game(board_mode = mode, layout = layout)
+    game.board.draw_board()
+
+    try:
+        if play_with_robot(game, client_socket, cap, speaking=False, delay=0.5) == "exit":
             if client_socket: client_socket.send("exit".encode('utf-8'))
             print("Exiting game")
             if client_socket: client_socket.close()
@@ -153,3 +170,7 @@ if __name__ == "__main__":
         if client_socket: client_socket.send("exit".encode('utf-8'))
         print("Exiting game")
         if client_socket: client_socket.close()
+        # Release the webcam and close any open windows
+        if cap: 
+            cap.release()
+            cv2.destroyAllWindows()

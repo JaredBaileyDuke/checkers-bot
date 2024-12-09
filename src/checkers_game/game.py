@@ -5,13 +5,13 @@ import openai
 import os
 
 class Game:
-    def __init__(self, board_mode="classic", layout = ['RE2', 'BD3K', 'BB5', 'BB7', 'BD7', 'BF5']):
+    def __init__(self, board_mode="classic", layout = ['RE2', 'BD3K', 'BB5', 'BB7', 'BD7', 'BF5'], start_player='red'):
         """
         Set up the game
         """
         self.board = Board(mode=board_mode, layout=layout)
-        self.turn = 'red'  # Starting player
-        self.opponent = 'black'
+        self.turn = start_player
+        self.opponent = 'black' if start_player == 'red' else 'red'
         self.valid_moves = {}
         self.tie = False
 
