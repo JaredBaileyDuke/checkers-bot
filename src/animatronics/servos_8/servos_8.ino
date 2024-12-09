@@ -64,58 +64,61 @@ void loop() {
   Serial.println(random_num);
   Serial.println(talk_seconds);
 
-  // Conditions
-  if (random_num < 3) { // Move eyes 
-    // move eyes
-    pwm.setPWM(4, 0, vertical_eye_4); // Set servo 4 (vertical eyeball) to random position
-    // pwm.setPWM(4, 0, angleToPulse(60)); // low
-    // delay(2000);
-    // pwm.setPWM(4, 0, angleToPulse(130)); // high
-    // delay(2000);
+  // talk_seconds == 0 (no talking)
+  if (talk_seconds == 0) {
+    // Conditions
+    if (random_num < 3) { // Move eyes 
+      // move eyes
+      pwm.setPWM(4, 0, vertical_eye_4); // Set servo 4 (vertical eyeball) to random position
+      // pwm.setPWM(4, 0, angleToPulse(60)); // low
+      // delay(2000);
+      // pwm.setPWM(4, 0, angleToPulse(130)); // high
+      // delay(2000);
 
 
-    pwm.setPWM(5, 0, horizontal_eye_5); // Set servo 5 (horizontal eyeball) to random position
-    delay(2000); // Wait for servos to reach position
-    // pwm.setPWM(5, 0, angleToPulse(60)); // low
-    // delay(2000);
-    // pwm.setPWM(5, 0, angleToPulse(120)); // high
-    // delay(2000); // Wait for servos to reach position
-  } 
-  
-  if (random_num > 7) { // Blink eyes
-    // Reset eyes to neutral position before we operate eyelids
-    pwm.setPWM(4, 0, angleToPulse(90)); // vertical eyes, neutral position
-    pwm.setPWM(5, 0, angleToPulse(90)); // horizontal eyes, neutral position
+      pwm.setPWM(5, 0, horizontal_eye_5); // Set servo 5 (horizontal eyeball) to random position
+      delay(2000); // Wait for servos to reach position
+      // pwm.setPWM(5, 0, angleToPulse(60)); // low
+      // delay(2000);
+      // pwm.setPWM(5, 0, angleToPulse(120)); // high
+      // delay(2000); // Wait for servos to reach position
+    } 
+    
+    if (random_num > 7) { // Blink eyes
+      // Reset eyes to neutral position before we operate eyelids
+      pwm.setPWM(4, 0, angleToPulse(90)); // vertical eyes, neutral position
+      pwm.setPWM(5, 0, angleToPulse(90)); // horizontal eyes, neutral position
 
-    // close eyelids
-    pwm.setPWM(0, 0, close_lids_0); // Set servo 0 to close top left eyelid position
-    pwm.setPWM(1, 0, close_lids_1); // Set servo 1 to close bottom left eyelid position
-    pwm.setPWM(2, 0, close_lids_2); // Set servo 2 to close top right eyelid position
-    pwm.setPWM(3, 0, close_lids_3); // Set servo 3 to close bottom righ eyelid position
-    delay(500); // Wait for servos to reach position
+      // close eyelids
+      pwm.setPWM(0, 0, close_lids_0); // Set servo 0 to close top left eyelid position
+      pwm.setPWM(1, 0, close_lids_1); // Set servo 1 to close bottom left eyelid position
+      pwm.setPWM(2, 0, close_lids_2); // Set servo 2 to close top right eyelid position
+      pwm.setPWM(3, 0, close_lids_3); // Set servo 3 to close bottom righ eyelid position
+      delay(500); // Wait for servos to reach position
 
-    // open eyelids
-    pwm.setPWM(0, 0, open_lids_0); // Set servo 0 to open top left eyelid position
-    pwm.setPWM(1, 0, open_lids_1); // Set servo 1 to open bottom left eyelid position
-    pwm.setPWM(2, 0, open_lids_2); // Set servo 2 to open top left eyelid position
-    pwm.setPWM(3, 0, open_lids_3); // Set servo 3 to open bottom right eyelid position
-    delay(2000); // Wait for servos to reach position
+      // open eyelids
+      pwm.setPWM(0, 0, open_lids_0); // Set servo 0 to open top left eyelid position
+      pwm.setPWM(1, 0, open_lids_1); // Set servo 1 to open bottom left eyelid position
+      pwm.setPWM(2, 0, open_lids_2); // Set servo 2 to open top left eyelid position
+      pwm.setPWM(3, 0, open_lids_3); // Set servo 3 to open bottom right eyelid position
+      delay(2000); // Wait for servos to reach position
+    }
   }
   
-
-  if (talk_seconds > 0) { // Talk for length of talk_seconds
+  // talk_seconds > 0 (yes talking)
+  elif (talk_seconds > 0) { // Talk for length of talk_seconds
     // Repeat mouth open and close 7 times
     int count = 0; // Initialize counter
-    while (count < 4) {
+    while (count < talk_seconds * 2) {
       // mouth open
       pwm.setPWM(6, 0, mouth_open_6); // Set servo 6 to open mouth position
       pwm.setPWM(7, 0, mouth_open_7); // Set servo 6 to open mouth position
-      delay(200);
+      delay(250);
 
       // mouth closed
       pwm.setPWM(6, 0, mouth_closed_6); // Set servo 6 to closed mouth position
       pwm.setPWM(7, 0, mouth_closed_7); // Set servo 6 to closed mouth position
-      delay(200);
+      delay(250);
       count++; // Increment counter
     }
 
