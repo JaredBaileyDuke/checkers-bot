@@ -7,6 +7,7 @@ from time import sleep
 import pygame
 from cv import take_photo as tp
 import cv2
+from voice_control import voice_control as vc
 
 def adapt_to_robot(message, game):
     '''
@@ -80,13 +81,13 @@ def robot_turn(game, message, socket, speaking = True, delay = 0):
     while speaking and pygame.mixer.music.get_busy():
         pass
 
-def play_with_robot(game, socket, cap, speaking = True, delay = 0):
+def play_with_robot(game, socket, cap, speaking = True, delay = 0, start_color = 'black', voice_controled = False):
     """
     Game loop for robot play
     """
     message = ""
     while True:
-        if game.turn == 'red':
+        if game.turn == start_color:
             # message = game.ai_turn(difficulty="Random")
             # message = game.ai_turn(difficulty="Prefer Jumps")
             # message = game.ai_turn(difficulty="LLM")
@@ -96,17 +97,39 @@ def play_with_robot(game, socket, cap, speaking = True, delay = 0):
             user = True
             if not user:
                 robot_turn(game, message, socket, speaking = speaking)
+            elif voice_controled:
+                print(start_color, "It's your turn")
+                #record audio for 5 seconds
+                audio_file = "move_audio.wav"
+                vc.record_audio(audio_file, 5)
+                #convert speech to text
+                text = vc.speech_to_text(audio_file)
+                if "exit" in text:
+                    return "exit"
+                game.user_turn(text)
             elif cap:
                 #give the user 5 seconds to make a move
-                print("You have 5 seconds to make a move")
-                for i in range(5):
+                time = 10
+                print(start_color, "You have", time ,"seconds to make a move")
+                for i in range(time):
                     sleep(1)
-                    print(5-i)
+                    print(time-i)
                 # Capture the frame
                 frame = tp.capture_frame(cap)
                 piece_locations = tp.cv_process_image(frame)
-                layout = tp.return_board_layout(piece_locations)
-                game = Game(board_mode = mode, layout = layout, start_player = 'red')
+                try: 
+                    layout = tp.return_board_layout(piece_locations)
+                except:
+                    print("Error: Could not process image.")
+                    continue
+                #switch turns
+                start_player = game.turn
+                game = Game(board_mode = mode, layout = layout, start_player = start_player)
+                if game.check_winner():
+                    message = "exit"
+                    print("Game over!")
+                    if socket: client_socket.send(message.encode('utf-8'))
+                    return message
             else:
                 user_input = input("Enter your move (e.g., 'a3 b4'): ")
                 if user_input == "exit":
@@ -157,6 +180,9 @@ if __name__ == "__main__":
     # cap = tp.initialize_webcam()
     cap = None #for testing only (if you don't have a webcam)
 
+    voice_controled = True
+    user_player = 'black'
+
     #start the game
     if cap:
         mode = 'custom' # 'classic' or 'custom'
@@ -166,11 +192,11 @@ if __name__ == "__main__":
     else:
         mode = 'classic'
         layout = None
-    game = Game(board_mode = mode, layout = layout)
+    game = Game(board_mode = mode, layout = layout, start_player = user_player)
     game.board.draw_board()
 
     try:
-        if play_with_robot(game, client_socket, cap, speaking=False, delay=0.5) == "exit":
+        if play_with_robot(game, client_socket, cap, speaking=True, delay=0.5, start_color=user_player, voice_controled=voice_controled) == "exit":
             if client_socket: client_socket.send("exit".encode('utf-8'))
             print("Exiting game")
             if client_socket: client_socket.close()

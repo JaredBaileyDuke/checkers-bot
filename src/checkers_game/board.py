@@ -54,6 +54,7 @@ class Board:
                 try: 
                     if piece_str[3] == 'K':
                         piece.promote_to_king()
+                        piece.crown()
                         if color == 'red': self.red_king_count += 1
                         if color == 'black': self.black_king_count += 1
                 except IndexError:

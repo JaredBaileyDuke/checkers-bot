@@ -2,6 +2,7 @@ import cv2
 import os
 from time import sleep
 from . import piece_locations as pl
+# import piece_locations as pl
 
 
 def return_piece_location_string(input):
