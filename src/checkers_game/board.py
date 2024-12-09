@@ -1,16 +1,18 @@
-from piece import Piece
+from .piece import Piece
 
 class Board:
-    def __init__(self):
+    def __init__(self, mode='classic', layout=['RB1', 'RD1', 'BA8', 'BC8K']):
         """
         Initialize the board with pieces in starting positions
         """
-        self.board, self.pieces = self.create_board()
-        self.red_count = 12
-        self.black_count = 12
+        self.red_count = 0
+        self.black_count = 0
+        self.red_king_count = 0
+        self.black_king_count = 0
+        self.board, self.pieces = self.create_board(layout=mode, custom_layout=layout)
         self.store_piece_locations()
         
-    def create_board(self):
+    def create_board(self, layout='classic', custom_layout=['RB1', 'RD1', 'BA8', 'BC8K']):
         """
         Initialize an 8x8 board with starting positions
     
@@ -20,19 +22,47 @@ class Board:
         """
         board: list[list[None | Piece]] = [[None for _ in range(8)] for _ in range(8)]
         pieces: list[Piece] = []
-        # Place red pieces
-        for row in range(3):
-            for col in range(8):
-                if (row + col) % 2 != 0:
-                    board[row][col] = Piece('red', (row, col))
-                    pieces.append(board[row][col])           
-        # Place black pieces
-        for row in range(5, 8):
-            for col in range(8):
-                if (row + col) % 2 != 0:
-                    board[row][col] = Piece('black', (row, col))
-                    pieces.append(board[row][col])
-
+        if layout == 'classic':
+            # Place red pieces
+            for row in range(3):
+                for col in range(8):
+                    if (row + col) % 2 != 0:
+                        board[row][col] = Piece('red', (row, col))
+                        pieces.append(board[row][col])
+                        self.red_count += 1          
+            # Place black pieces
+            for row in range(5, 8):
+                for col in range(8):
+                    if (row + col) % 2 != 0:
+                        board[row][col] = Piece('black', (row, col))
+                        pieces.append(board[row][col])
+                        self.black_count += 1
+        elif layout == 'empty':
+            pass
+        elif layout == 'custom':
+            for piece_str in custom_layout:
+                color = piece_str[0].lower()
+                row = int(piece_str[2])-1
+                col = ord(piece_str[1].upper()) - 65
+                if color == 'r':
+                    color = 'red'
+                    self.red_count += 1
+                elif color == 'b':
+                    color = 'black'
+                    self.black_count += 1
+                piece = Piece(color, (row, col))
+                try: 
+                    if piece_str[3] == 'K':
+                        piece.promote_to_king()
+                        piece.crown()
+                        if color == 'red': self.red_king_count += 1
+                        if color == 'black': self.black_king_count += 1
+                except IndexError:
+                    pass
+                board[row][col] = piece
+                pieces.append(piece)
+        else:
+            raise ValueError("Invalid board layout")
         return board, pieces
     
     def store_piece_locations(self):
@@ -135,14 +165,16 @@ class Board:
 
         # Move the piece
         self.remove_piece(piece)
-        # print("Moved: ", piece, " to ", dest_row, dest_col)
-        # self.print_pieces()
         piece.move(dest_row, dest_col)
         self.board[dest_row][dest_col] = piece
 
         # Check for king promotion
         if (piece.color == 'red' and dest_row == 7) or (piece.color == 'black' and dest_row == 0):
-            piece.promote_to_king()
+            #if it is not already a king update king counts
+            if not piece.get_king():
+                if piece.color == 'red': self.red_king_count += 1
+                if piece.color == 'black': self.black_king_count += 1
+                piece.promote_to_king()
 
         # update piece locations
         self.store_piece_locations()
@@ -359,6 +391,19 @@ class Board:
                 color_pieces.append(piece)
 
         return color_pieces
+    
+    def remove_all_pieces(self):
+        """
+        Remove all pieces from the board
+        """
+        for piece in self.pieces:
+            self.remove_piece(piece, remove_from_list=True)
+        self.pieces = []
+        self.red_count = 0
+        self.black_count = 0
+        self.red_king_count = 0
+        self.black_king_count = 0
+        self.store_piece_locations()
 
     def remove_piece(self, piece, remove_from_list=False):
         """
@@ -454,7 +499,8 @@ class Board:
         return new_board
 
 if __name__ == "__main__":
-    game_board = Board()
+    layout = ['RE2', 'BD3K', 'BB5', 'BB7', 'BD7', 'BF5']
+    game_board = Board(mode='custom', custom_layout=layout)
     game_board.draw_board()  # Display the board
     game_board.store_piece_locations()
-    print(game_board.pieces) # piece list
+    game_board.print_pieces()

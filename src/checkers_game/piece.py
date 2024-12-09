@@ -16,6 +16,7 @@ class Piece:
         self.color = color  # Color of the piece
         self.location = location  # Current location of the piece
         self.king = False  # Indicates if the piece is a king
+        self.crowned = False  # Indicates if the piece has been crowned by the robot
         self.move_directions = []  # List of potential move directions
         self.jump_directions = []
         self.extra_jump = False
@@ -163,6 +164,18 @@ class Piece:
         Return the king status of the piece
         """
         return self.king
+    
+    def get_crowned(self):
+        """
+        Return the crowned status of the piece
+        """
+        return self.crowned
+    
+    def crown(self):
+        """
+        Crown the piece
+        """
+        self.crowned = True
     
     def get_potential_move_directions(self):
         """

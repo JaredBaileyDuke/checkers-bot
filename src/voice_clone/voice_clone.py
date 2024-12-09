@@ -3,7 +3,6 @@ This script takes a cloned voice, and plays it over speakers on the robot
 Premade audio files are available in the premade_audio folder
 On the fly audio can be generated through the API call
 """
-
 import pygame
 import random
 import openai
@@ -16,17 +15,17 @@ def play_audio(audio_file=None):
     if audio_file is None:
         # Choose a random number between 1 and 50, inclusive
         random_number = random.randint(1, 50)
-        # Play the audio file
+        # Pick a random audio file
         audio_file = f"premade_audio/smackTalk_{random_number}.mp3"
 
     pygame.mixer.init()
     pygame.mixer.music.load(audio_file)
+    #find the length of the audio file in seconds
+    audio = pygame.mixer.Sound(audio_file)
+    audio_length = audio.get_length()
     pygame.mixer.music.play()
-
-    while pygame.mixer.music.get_busy():  # Wait for the music to finish playing
-        pass
     
-    return
+    return audio_length
 
 def get_chatgpt_text(api_key):
     """
@@ -93,8 +92,27 @@ def get_elevenLabs_audio(api_key, voice_id, text):
     else:
         print(f"Error: {response.status_code} - {response.text}")
 
+def play_premade_audio(extra_file_path=None):
+    """
+    Play a premade audio file
+    """
+    # Choose a random number between 1 and 50, inclusive
+    random_number = random.randint(1, 50)
+    print(random_number)
+    #make the random number string two digits
+    if random_number < 10:
+        random_number = f"0{random_number}"
+    else:
+        random_number = f"{random_number}"
+    # Play the audio file
+    audio_file = f"premade_audio/smackTalk_{random_number}.mp3"
+    if extra_file_path:
+        #add the extra file path to the audio file
+        audio_file = extra_file_path + audio_file
+    audio_length = play_audio(audio_file)
+    return audio_length
 
-if __name__ == "__main__":
+def main():
     # get api key from file GPT_API_KEY.txt
     with open(".apis/GPT_API_KEY.txt", "r") as f:
         gpt_api_key = f.read()
@@ -114,5 +132,14 @@ if __name__ == "__main__":
     # get audio file from ElevenLabs API
     get_elevenLabs_audio(el_api_key, voice_id, gpt_response)
 
+    filename = "realtime_audio/elevenLabs_audio.mp3"
     # play the audio file
-    play_audio('realtime_audio/elevenLabs_audio.mp3')
+    play_audio(filename)
+
+if __name__ == "__main__":
+    # main()
+    print(play_premade_audio())
+    while pygame.mixer.music.get_busy():  # Wait for the music to finish playing
+        pass
+    print("Audio finished playing")
+    
