@@ -14,13 +14,13 @@ int angleToPulse(int angle) {
 }
 
 // Open eyelids
-int open_lids_0 = angleToPulse(55); // left top 75??
-int open_lids_1 = angleToPulse(85); // left bottom 85
-int open_lids_2 = angleToPulse(135); // right top 135
-int open_lids_3 = angleToPulse(65); // right bottom 65
+int open_lids_0 = angleToPulse(65); // left top 65
+int open_lids_1 = angleToPulse(75); // left bottom 75
+int open_lids_2 = angleToPulse(125); // right top 125
+int open_lids_3 = angleToPulse(75); // right bottom 75
 
 // Close eyelids
-int close_lids_0 = angleToPulse(110); // left top 135??
+int close_lids_0 = angleToPulse(110); // left top 110
 int close_lids_1 = angleToPulse(30); // left bottom 30
 int close_lids_2 = angleToPulse(75); // right top 75
 int close_lids_3 = angleToPulse(120); // right bottom 120
