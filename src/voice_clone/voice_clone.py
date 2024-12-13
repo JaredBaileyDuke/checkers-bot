@@ -92,12 +92,12 @@ def get_elevenLabs_audio(api_key, voice_id, text):
     else:
         print(f"Error: {response.status_code} - {response.text}")
 
-def play_premade_audio(extra_file_path=None):
+def play_premade_audio(extra_file_path=None, actually_play=True):
     """
     Play a premade audio file
     """
     # Choose a random number between 1 and 50, inclusive
-    random_number = random.randint(1, 50)
+    random_number = random.randint(0, 50)
     print(random_number)
     #make the random number string two digits
     if random_number < 10:
@@ -109,6 +109,24 @@ def play_premade_audio(extra_file_path=None):
     if extra_file_path:
         #add the extra file path to the audio file
         audio_file = extra_file_path + audio_file
+    if actually_play: audio_length = play_audio(audio_file)
+    else: 
+        pygame.mixer.init()
+        pygame.mixer.music.load(audio_file)
+        #calculate the length of the audio file
+        audio = pygame.mixer.Sound(audio_file)
+        audio_length = audio.get_length()
+
+    return audio_file, audio_length
+
+def play_laugh_audio():
+    """
+    Play a laugh audio file
+    """
+    # Choose a random number between 1 and 50, inclusive
+    random_number = random.randint(1, 6)
+    # Play the audio file
+    audio_file = f"laugh_audio/ha_{random_number}.mp3"
     audio_length = play_audio(audio_file)
     return audio_length
 

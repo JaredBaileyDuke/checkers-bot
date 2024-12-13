@@ -8,6 +8,7 @@ import pygame
 from cv import take_photo as tp
 import cv2
 from voice_control import voice_control as vc
+import animatronics_send as asend
 
 def adapt_to_robot(message, game):
     '''
@@ -59,7 +60,7 @@ def adapt_to_robot(message, game):
 
     return message
 
-def robot_turn(game, message, socket, speaking = True, delay = 0):
+def robot_turn(game, message, socket, speaking = True, delay = 0, arduino = None):
     """
     Robot's turn
     """
@@ -67,21 +68,36 @@ def robot_turn(game, message, socket, speaking = True, delay = 0):
     print(message)
     #play the audio
     if speaking:
-        print(voice_clone.play_premade_audio())
+        audio_file, t = voice_clone.play_premade_audio(actually_play=False)
+        #round the time to the nearest second
+        t = round(t)
+        if arduino and not socket: 
+            asend.send_message_to_arduino(arduino, t)
+            delay_because_arduino_code_is_slow = 1.75
+            sleep(delay_because_arduino_code_is_slow)
+        voice_clone.play_audio(audio_file)
+        
     if socket: 
         # Send the message to the server
         client_socket.send(message.encode('utf-8'))
         # Wait for the robot to finish its turn
         #wait for a "complete" message from the robot
+        if speaking and arduino:
+            asend.send_message_to_arduino(arduino, t)
+            delay_because_arduino_code_is_slow = 1.75
+            sleep(delay_because_arduino_code_is_slow)
         recieve_message = rc.receive_message(client_socket)
         while recieve_message != "complete":
+            if recieve_message == "jump" and speaking:
+                print(voice_clone.play_laugh_audio())
+                recieve_message = ""
             recieve_message = rc.receive_message(client_socket)
             print("Waiting for robot to finish...")
     #wait for the audio to finish playing
     while speaking and pygame.mixer.music.get_busy():
         pass
 
-def play_with_robot(game, socket, cap, speaking = True, delay = 0, start_color = 'black', voice_controled = False):
+def play_with_robot(game, socket, cap, speaking = True, delay = 0, start_color = 'black', voice_controled = False, arduino = None):
     """
     Game loop for robot play
     """
@@ -96,7 +112,7 @@ def play_with_robot(game, socket, cap, speaking = True, delay = 0, start_color =
             #if the robot is playing
             user = True
             if not user:
-                robot_turn(game, message, socket, speaking = speaking)
+                robot_turn(game, message, socket, speaking = speaking, arduino = arduino)
             elif voice_controled:
                 print(start_color, "It's your turn")
                 #record audio for 5 seconds
@@ -107,6 +123,7 @@ def play_with_robot(game, socket, cap, speaking = True, delay = 0, start_color =
                 if "exit" in text:
                     return "exit"
                 game.user_turn(text)
+                robot_turn(game, text, socket, speaking = False)
             elif cap:
                 #give the user 5 seconds to make a move
                 time = 10
@@ -131,6 +148,7 @@ def play_with_robot(game, socket, cap, speaking = True, delay = 0, start_color =
                     if socket: client_socket.send(message.encode('utf-8'))
                     return message
             else:
+                print(start_color, "It's your turn")
                 user_input = input("Enter your move (e.g., 'a3 b4'): ")
                 if user_input == "exit":
                     return "exit"
@@ -148,7 +166,7 @@ def play_with_robot(game, socket, cap, speaking = True, delay = 0, start_color =
             #if the robot is playing
             user = False
             if not user:
-                robot_turn(game, message, socket, speaking = speaking)
+                robot_turn(game, message, socket, speaking = speaking, arduino = arduino)
 
         if game.check_winner():
             message = "exit"
@@ -174,13 +192,17 @@ def play_with_robot(game, socket, cap, speaking = True, delay = 0, start_color =
             return message
 
 if __name__ == "__main__":
-    # client_socket = rc.connect_to_robot()
-    client_socket = None #for testing only (if you don't have a robot to connect to)
+    client_socket = rc.connect_to_robot()
+    # client_socket = None #for testing only (if you don't have a robot to connect to)
 
-    # cap = tp.initialize_webcam()
-    cap = None #for testing only (if you don't have a webcam)
+    cap = tp.initialize_webcam()
+    # cap = None #for testing only (if you don't have a webcam)
 
-    voice_controled = True
+    # arduino = asend.setup_arduino_connection("/dev/cu.usbmodem1101", 9600)
+    arduino = None
+
+    voice_controled = False
+    speaking = True
     user_player = 'black'
 
     #start the game
@@ -196,7 +218,7 @@ if __name__ == "__main__":
     game.board.draw_board()
 
     try:
-        if play_with_robot(game, client_socket, cap, speaking=True, delay=0.5, start_color=user_player, voice_controled=voice_controled) == "exit":
+        if play_with_robot(game, client_socket, cap, speaking=speaking, delay=0.5, start_color=user_player, voice_controled=voice_controled, arduino = arduino) == "exit":
             if client_socket: client_socket.send("exit".encode('utf-8'))
             print("Exiting game")
             if client_socket: client_socket.close()
@@ -207,6 +229,6 @@ if __name__ == "__main__":
         print("Exiting game")
         if client_socket: client_socket.close()
         # Release the webcam and close any open windows
-        if cap: 
+        if cap:
             cap.release()
             cv2.destroyAllWindows()
