@@ -1,7 +1,8 @@
-from .board import Board, Piece
+from src.checkers_game.board import Board, Piece
+from src.arm_actions.move import perform_robot_move
 import random
 from time import sleep
-import openai
+# import openai
 import os
 
 class Game:
@@ -164,7 +165,7 @@ class Game:
 
         return move
             
-    def minimax(self, depth: int, maximizing_player: bool, board: Board) -> tuple[float, tuple[Piece, tuple[int, int]]]:
+    def minimax(self, depth: int, maximizing_player: bool, board: Board): # -> tuple[float, tuple[Piece, tuple[int, int]]]:
         """
         Minimax algorithm to find the best move for the AI
 
@@ -482,22 +483,26 @@ class Game:
             return True
         return False
     
-    def play(self):
+    def play(self, mc):
         """
         Game loop
         """
         while True:
             if self.turn == 'red':
-                print(self.ai_turn(difficulty="Random"))
-                # print(self.ai_turn(difficulty="Prefer Jumps"))
+                # print(self.ai_turn(difficulty="Random"))
+                robot_move = self.ai_turn(difficulty="Prefer Jumps")
+                print(robot_move)
+                perform_robot_move(mc, robot_move)
                 # print(self.ai_turn(difficulty="LLM"))
                 # print(self.ai_turn(difficulty="Minimax"))
                 # self.user_turn()
             else:
-                print(self.ai_turn(difficulty="Random"))
+                # print(self.ai_turn(difficulty="Random"))
                 # print(self.ai_turn(difficulty="Prefer Jumps"))
                 # print(self.ai_turn(difficulty="LLM"))
-                # print(self.ai_turn(difficulty="Minimax"))
+                robot_move = self.ai_turn(difficulty="Minimax")
+                print(robot_move)
+                perform_robot_move(mc, robot_move)
                 # self.user_turn()
             if self.check_winner():
                 break

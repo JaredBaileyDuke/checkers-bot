@@ -2,7 +2,7 @@ from pymycobot.mycobot import MyCobot
 import sys
 import os
 from time import sleep
-from electromagnet_gpio import *
+from .electromagnet_gpio import *
 sys.path.append(os.path.dirname(__file__))
 
 def convert_to_angles(checker_space):
@@ -47,7 +47,7 @@ def angle_space_before_after(angles):
 
     return angles_ba
 
-def angle_move(mc, checker_space, sleep_time, magnet="off"):
+def angle_move(mc, checker_space, sleep_time, magnet="off", speed=25):
     """
     Give movements based on entered checker space
     For use with operational space
@@ -115,7 +115,7 @@ def coord_space_before_after(checker_coordinates):
 
     return checker_coordinates_ba
 
-def coord_move(mc, checker_space, sleep_time, magnet="off"):
+def coord_move(mc, checker_space, sleep_time, magnet="off", speed=25):
     """
     Give movements based on entered checker space
     For use with operational space

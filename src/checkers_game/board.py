@@ -1,4 +1,4 @@
-from .piece import Piece
+from src.checkers_game.piece import Piece
 
 class Board:
     def __init__(self, mode='classic', layout=['RB1', 'RD1', 'BA8', 'BC8K']):
@@ -460,7 +460,7 @@ class Board:
         # print("Restored: ", piece)
         return True
 
-    def get_piece(self, row, col) -> Piece | None:
+    def get_piece(self, row, col): # -> Piece | None:
         """
         Get the piece at a given location
 
